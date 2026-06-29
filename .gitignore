@@ -1,0 +1,6 @@
+.env
+node_modules/
+kuehlschrank.json
+fitness-state.json
+*.ogg
+*.oga

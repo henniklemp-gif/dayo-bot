@@ -1,0 +1,22 @@
+{
+  "name": "dayo",
+  "version": "1.0.0",
+  "description": "Persönlicher Telegram Alltagsbegleiter",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "dotenv": "^16.4.7",
+    "node-cron": "^3.0.3",
+    "node-telegram-bot-api": "^0.66.0",
+    "openai": "^4.85.0",
+    "tsdav": "^2.0.11",
+    "uuid": "^11.0.0"
+  }
+}

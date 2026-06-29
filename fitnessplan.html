@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>50-Tage Fitness-Plan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0f172a;
+    --surface:   #1e293b;
+    --surface2:  #0c1a2e;
+    --border:    #334155;
+    --green:     #4ade80;
+    --green-dk:  #166534;
+    --green-bg:  #14532d;
+    --blue:      #22d3ee;
+    --text:      #e2e8f0;
+    --muted:     #94a3b8;
+    --dim:       #64748b;
+    --red-bg:    #450a0a;
+    --red:       #fca5a5;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--surface);
+    padding: 24px 20px 18px;
+  }
+  .header-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .eyebrow {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: #f1f5f9;
+    line-height: 1.2;
+  }
+  .subline {
+    color: var(--dim);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  /* SAVE INDICATOR */
+  #save-indicator {
+    display: none;
+    font-size: 11px;
+    border-radius: 99px;
+    padding: 5px 12px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  #save-indicator.saving { display:block; background: var(--green-bg); color: var(--green); border-color: #4ade8044; }
+  #save-indicator.saved  { display:block; background: var(--green-bg); color: var(--green); border-color: #4ade8044; }
+  #save-indicator.error  { display:block; background: var(--red-bg);   color: var(--red);   border-color: #fca5a544; }
+
+  /* PROGRESS */
+  .progress-box {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .progress-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .progress-row span:last-child { color: var(--green); font-weight: 700; }
+  .progress-track {
+    background: var(--bg);
+    border-radius: 99px;
+    height: 9px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    background: linear-gradient(90deg, var(--green), var(--blue));
+    height: 100%;
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .progress-sub {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--dim);
+  }
+
+  /* TABS */
+  .main { max-width: 680px; margin: 0 auto; padding: 0 20px; }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-top: 14px;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 9px 6px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    background: transparent;
+    color: var(--dim);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .tab-btn.active {
+    background: var(--green);
+    color: #0f172a;
+  }
+
+  /* TAB PANELS */
+  .panel { display: none; margin-top: 14px; }
+  .panel.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+  }
+  .card.green-border { border-color: var(--green-dk); }
+  .card.red-border   { border-color: #7f1d1d; }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  /* WEEKLY GRID */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+  }
+  .week-cell { text-align: center; }
+  .week-cell-label { font-size: 9px; color: var(--dim); margin-bottom: 3px; }
+  .week-cell-box {
+    border-radius: 8px;
+    padding: 7px 2px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .week-cell-box.train-day { background: var(--green-dk); border-color: var(--green); }
+  .week-cell-icon { font-size: 14px; }
+  .week-cell-text { font-size: 7px; color: var(--dim); margin-top: 2px; }
+  .week-cell-box.train-day .week-cell-text { color: var(--green); }
+
+  /* PHASE PILLS */
+  .phase-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .phase-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 4px 11px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .phase-pill strong { color: var(--green); }
+
+  /* WEEK ACCORDION */
+  .week-block {
+    background: var(--surface);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .week-block.all-done { border-color: var(--green-dk); }
+  .week-header {
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+  }
+  .week-header-right { display: flex; align-items: center; gap: 8px; }
+  .week-count { font-size: 11px; color: var(--dim); }
+  .week-count.done-color { color: var(--green); }
+  .week-chevron { color: #475569; font-size: 13px; transition: transform 0.2s; }
+  .week-days { display: none; padding: 0 13px 13px; }
+  .week-days.open { display: block; }
+
+  /* DAY ROWS */
+  .day-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 11px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    background: var(--bg);
+    border: 1px solid var(--surface);
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .day-row.train-row { background: var(--surface2); border-color: #1e3a5f; }
+  .day-row.done-row  { background: var(--green-bg); border-color: var(--green); }
+
+  .day-check {
+    width: 21px; height: 21px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    border: 2px solid var(--border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #0f172a;
+    font-weight: 900;
+    transition: all 0.15s;
+  }
+  .day-row.done-row .day-check {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .day-info { flex: 1; }
+  .day-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .day-num { font-size: 10px; color: #475569; min-width: 22px; }
+  .day-name { font-size: 12px; font-weight: 600; color: #cbd5e1; }
+  .day-row.done-row .day-name { color: #86efac; }
+  .phase-badge {
+    font-size: 9px;
+    color: var(--green);
+    background: var(--green-bg);
+    border-radius: 99px;
+    padding: 1px 6px;
+  }
+  .day-desc {
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 3px;
+    margin-left: 28px;
+    line-height: 1.5;
+  }
+
+  /* MEAL SECTION */
+  .meal-option {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 6px 9px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    background: var(--bg);
+  }
+  .meal-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .meal-text { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+  .meal-title { font-size: 13px; font-weight: 700; margin-bottom: 9px; }
+
+  /* AVOID TAGS */
+  .avoid-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .avoid-tag {
+    background: var(--red-bg);
+    color: var(--red);
+    border-radius: 99px;
+    padding: 3px 9px;
+    font-size: 11px;
+  }
+
+  /* TIPS */
+  .tip-card {
+    display: flex;
+    gap: 11px;
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 13px 15px;
+    margin-bottom: 7px;
+    border: 1px solid var(--border);
+  }
+  .tip-icon { font-size: 22px; min-width: 30px; }
+  .tip-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .tip-desc  { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* FITNESS+ BOX */
+  .fitness-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 7px;
+    align-items: flex-start;
+  }
+  .fitness-tag {
+    background: var(--green-dk);
+    color: var(--green);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .fitness-desc { font-size: 11px; color: var(--muted); }
+
+  .section-title { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 9px; }
+  .section-body  { font-size: 12px; color: var(--muted); line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="eyebrow">50-Tage · 2× Kraft · 1× Laufen</div>
+        <h1>Dein Fitness-Plan 🔥</h1>
+        <div class="subline">95 kg · 197 cm · Mann · Apple Fitness+</div>
+      </div>
+      <div id="save-indicator"></div>
+    </div>
+    <div class="progress-box">
+      <div class="progress-row">
+        <span>Gesamtfortschritt</span>
+        <span id="total-label">0 / 50 Tage</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-sub">
+        <span id="train-label">💪 0/21 Trainings</span>
+        <span id="pct-label">0%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('plan', this)">📅 Training</button>
+    <button class="tab-btn"        onclick="switchTab('essen', this)">🥗 Ernährung</button>
+    <button class="tab-btn"        onclick="switchTab('tipps', this)">💡 Tipps</button>
+  </div>
+
+  <!-- PLAN -->
+  <div class="panel active" id="panel-plan">
+    <div class="card" style="margin-top:14px">
+      <div class="card-label">Wochenrhythmus</div>
+      <div class="week-grid" id="week-grid"></div>
+    </div>
+
+    <div class="phase-pills" id="phase-pills"></div>
+    <div id="week-list"></div>
+  </div>
+
+  <!-- ESSEN -->
+  <div class="panel" id="panel-essen">
+    <div class="card green-border" style="margin-top:14px">
+      <div class="section-title">🎯 Dein Kalorienziel</div>
+      <p class="section-body">
+        Tagesbedarf als Mann: <strong style="color:var(--text)">~2.700–2.900 kcal</strong><br>
+        Ziel mit Defizit: <strong style="color:var(--green)">2.200–2.400 kcal/Tag</strong> · <strong style="color:var(--green)">150–170 g Protein</strong>
+      </p>
+    </div>
+    <div id="meal-list"></div>
+    <div class="card red-border">
+      <div style="font-size:12px;font-weight:700;color:#f87171;margin-bottom:7px">❌ Meiden</div>
+      <div class="avoid-tags">
+        <span class="avoid-tag">Softdrinks</span><span class="avoid-tag">Weißbrot</span>
+        <span class="avoid-tag">Fast Food</span><span class="avoid-tag">Chips</span>
+        <span class="avoid-tag">Alkohol</span><span class="avoid-tag">Süßigkeiten</span>
+        <span class="avoid-tag">Fertigprodukte</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIPPS -->
+  <div class="panel" id="panel-tipps">
+    <div id="tips-list"></div>
+    <div class="card green-border">
+      <div class="section-title">📱 Apple Fitness+ Kursauswahl</div>
+      <div id="fitness-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const PHASES = [
+  {
+    label: "Woche 1–2: Grundlagen",
+    sessions: [
+      { type: "Fitness+: Kraft Oberkörper", icon: "💪", desc: "Fitness+ Strength-Kurs 20–25 Min. (Beginner) · Brust, Schultern, Arme · danach 5 Min. Stretching" },
+      { type: "Fitness+: Kraft Unterkörper", icon: "🦵", desc: "Fitness+ Strength-Kurs 20–25 Min. (Beginner) · Beine, Gesäß, Waden · danach 5 Min. Stretching" },
+      { type: "Laufen", icon: "🏃", desc: "5 km lockeres Tempo (Zone 2) · ca. 35–45 Min. · Fokus auf gleichmäßige Atmung" },
+    ]
+  },
+  {
+    label: "Woche 3–4: Aufbau",
+    sessions: [
+      { type: "Fitness+: Kraft Oberkörper", icon: "💪", desc: "Fitness+ Strength-Kurs 25–30 Min. (Mittel) · Push & Pull · Finisher: 2×10 Liegestütze" },
+      { type: "Fitness+: Kraft Unterkörper", icon: "🦵", desc: "Fitness+ Strength-Kurs 25–30 Min. (Mittel) · Kniebeugen & Ausfallschritte · Finisher: 2×15 Glute Bridge" },
+      { type: "Laufen + Intervalle", icon: "🏃", desc: "5 km mit Fahrtspiel · 2× 3 Min. schneller laufen, Rest ruhig · danach 10 Min. Stretching" },
+    ]
+  },
+  {
+    label: "Woche 5–7+: Intensivierung",
+    sessions: [
+      { type: "Fitness+: Kraft Oberkörper", icon: "💪", desc: "Fitness+ Strength-Kurs 30 Min. (Fortgeschritten) · Finisher: 3×12 Liegestütze + 3×10 Dips" },
+      { type: "Fitness+: Kraft Ganzkörper", icon: "🦵", desc: "Fitness+ Ganzkörper-Strength 30 Min. (Fortgeschritten) · Finisher: 3×12 Kniebeugen + 3×10 Ausfallschritte" },
+      { type: "Laufen + Sprint", icon: "🏃", desc: "5 km mit Intervallen · 4× 1 Min. Sprint, Rest locker · oder 6 km ruhiges Ausdauertraining" },
+    ]
+  }
+];
+
+const WEEK_SCHED = [
+  { day: "Mo", train: true,  sIdx: 0, icon: "💪" },
+  { day: "Di", train: false, type: "Aktive Erholung",       icon: "🚶" },
+  { day: "Mi", train: true,  sIdx: 1, icon: "🦵" },
+  { day: "Do", train: false, type: "Ruhe / Spaziergang",    icon: "😴" },
+  { day: "Fr", train: true,  sIdx: 2, icon: "🏃" },
+  { day: "Sa", train: false, type: "Optional: Yoga/Mobility", icon: "🧘" },
+  { day: "So", train: false, type: "Regeneration",           icon: "😴" },
+];
+
+const MEALS = [
+  { cat: "🌅 Frühstück", color: "#fde68a", items: [
+    "Haferflocken (80 g) + Beeren + 1 EL Chiasamen + 200 ml Pflanzenmilch",
+    "Griechischer Joghurt (250 g) + Banane + 1 EL Nüsse",
+    "3 Eier gerührt + Vollkorntoast + Tomate + Gurke",
+    "Quark (250 g) + Apfel + Leinsamen + 1 EL Honig",
+  ]},
+  { cat: "☀️ Mittagessen", color: "#86efac", items: [
+    "Hähnchenbrust (200 g) + Reis (100 g trocken) + Gemüse",
+    "Lachsfilet (180 g) + Süßkartoffel + Brokkoli",
+    "Linsensuppe mit Karotten & Sellerie + 2 Scheiben Vollkornbrot",
+    "Rinderhack (150 g, mager) + Quinoa + Paprika-Pfanne",
+    "Putenbrust-Wrap (Vollkorn) mit Salat, Gurke, Hummus",
+  ]},
+  { cat: "🌙 Abendessen", color: "#93c5fd", items: [
+    "Hähnchen- oder Thunfischsalat mit Olivenöl & Zitrone",
+    "Gebackener Lachs (180 g) + grüner Salat + Avocado",
+    "Rührei (3 Eier) + gebratener Spinat + Feta",
+    "Magerquark (250 g) + Gurke + Paprika + Kräuter",
+    "Gemüsesuppe + 2 hartgekochte Eier + Vollkornbrot",
+  ]},
+  { cat: "🍎 Snacks", color: "#f9a8d4", items: [
+    "Handvoll Nüsse (25 g) + 1 Apfel",
+    "Proteinshake nach dem Training (20–25 g Protein)",
+    "Karotten & Hummus (3 EL)",
+    "Magerquark (150 g) + Beeren",
+    "2 Reiswaffeln + 1 EL Erdnussbutter",
+  ]},
+];
+
+const TIPS = [
+  { icon: "💧", t: "Wasser",            d: "Mindestens 3 Liter täglich. Vor dem Training 500 ml, danach wieder auffüllen." },
+  { icon: "🥩", t: "Protein-Priorität", d: "Als Mann 150–170 g Protein/Tag. Jede Mahlzeit sollte eine Proteinquelle enthalten." },
+  { icon: "🕗", t: "Essenszeiten",      d: "3 Hauptmahlzeiten, max. 1–2 Snacks. Abends nach 20 Uhr möglichst nichts mehr essen." },
+  { icon: "😴", t: "Schlaf",            d: "7–8 Stunden Schlaf sind entscheidend für Muskelwachstum und Fettabbau." },
+  { icon: "🚶", t: "Aktive Erholung",   d: "An trainingsfreien Tagen 20–30 Min. spazieren. Erhöht Kalorienverbrauch und fördert Regeneration." },
+  { icon: "📉", t: "Kaloriendefizit",   d: "Ziel: ~2.200–2.400 kcal/Tag. Nicht zu wenig essen – sonst leidet die Kraft!" },
+  { icon: "📱", t: "Tracking",          d: "MyFitnessPal für Kalorien. Wiege dich 1× pro Woche morgens nüchtern." },
+  { icon: "🎯", t: "Realistisches Ziel",d: "In 50 Tagen 3–5 kg Fettabbau bei gleichzeitigem Muskelaufbau." },
+];
+
+const FITNESS_TIPS = [
+  { tag: "Strength – Oberkörper", desc: "Mo · 20–30 Min. · Filter: Strength → Upper Body · Schwierigkeit je Phase steigern" },
+  { tag: "Strength – Unterkörper", desc: "Mi · 20–30 Min. · Filter: Strength → Lower Body · Beginner → Mittel → Fortgeschritten" },
+  { tag: "Laufen", desc: "Fr · 35–45 Min. · 5 km · mit Intervallen ab Phase 2" },
+  { tag: "Yoga / Mobility", desc: "Sa optional · Regeneration und Verletzungsprävention" },
+];
+
+// ── BUILD DAY LIST ─────────────────────────────────────────────────────────────
+
+function buildDays() {
+  const dow = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+  return Array.from({ length: 50 }, (_, i) => {
+    const n = i + 1;
+    const wi = i % 7;
+    const s  = WEEK_SCHED[wi];
+    const pi = n >= 29 ? 2 : n >= 15 ? 1 : 0;
+    const ph = PHASES[pi];
+    if (s.train) {
+      const sess = ph.sessions[s.sIdx];
+      return { day: n, dow: dow[wi], train: true,  type: sess.type, icon: sess.icon, desc: sess.desc, phase: pi+1 };
+    }
+    return   { day: n, dow: dow[wi], train: false, type: s.type,    icon: s.icon,    desc: "",         phase: pi+1 };
+  });
+}
+
+const ALL_DAYS = buildDays();
+const TRAIN_DAYS = ALL_DAYS.filter(d => d.train);
+
+// ── STORAGE ────────────────────────────────────────────────────────────────────
+
+const LS_KEY = "fitnessplan-v1";
+
+function loadChecked() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveChecked(data) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+    return true;
+  } catch { return false; }
+}
+
+let checked = loadChecked();
+
+// ── INDICATOR ──────────────────────────────────────────────────────────────────
+
+let indTimer = null;
+function showIndicator(state) {
+  const el = document.getElementById('save-indicator');
+  el.className = state;
+  const texts = { saving: '💾 Speichert…', saved: '✅ Gespeichert', error: '⚠️ Fehler' };
+  el.textContent = texts[state] || '';
+  if (indTimer) clearTimeout(indTimer);
+  if (state !== 'saving') {
+    indTimer = setTimeout(() => { el.className = ''; el.textContent = ''; }, 2000);
+  }
+}
+
+// ── PROGRESS ───────────────────────────────────────────────────────────────────
+
+function updateProgress() {
+  const total = ALL_DAYS.filter(d => checked[d.day]).length;
+  const trains = TRAIN_DAYS.filter(d => checked[d.day]).length;
+  const pct = Math.round((total / 50) * 100);
+  document.getElementById('total-label').textContent = `${total} / 50 Tage`;
+  document.getElementById('train-label').textContent = `💪 ${trains}/${TRAIN_DAYS.length} Trainings`;
+  document.getElementById('pct-label').textContent   = `${pct}%`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // update week headers
+  document.querySelectorAll('.week-block').forEach(block => {
+    const wNum = parseInt(block.dataset.week);
+    const weekDays = ALL_DAYS.slice((wNum-1)*7, Math.min(wNum*7, 50));
+    const done = weekDays.filter(d => checked[d.day]).length;
+    const countEl = block.querySelector('.week-count');
+    countEl.textContent = `${done}/${weekDays.length} ✓`;
+    countEl.classList.toggle('done-color', done === weekDays.length);
+    block.classList.toggle('all-done', done === weekDays.length);
+    // update individual rows
+    weekDays.forEach(d => {
+      const row = block.querySelector(`[data-day="${d.day}"]`);
+      if (!row) return;
+      const isDone = !!checked[d.day];
+      row.classList.toggle('done-row', isDone);
+      row.classList.toggle('train-row', d.train && !isDone);
+      row.querySelector('.day-check').textContent = isDone ? '✓' : '';
+      row.querySelector('.day-name').style.color = isDone ? '#86efac' : '#cbd5e1';
+    });
+  });
+}
+
+// ── TOGGLE ─────────────────────────────────────────────────────────────────────
+
+function toggleDay(day) {
+  checked[day] = !checked[day];
+  showIndicator('saving');
+  const ok = saveChecked(checked);
+  showIndicator(ok ? 'saved' : 'error');
+  updateProgress();
+}
+
+// ── TAB SWITCHING ──────────────────────────────────────────────────────────────
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+
+function renderWeekGrid() {
+  const el = document.getElementById('week-grid');
+  WEEK_SCHED.forEach(s => {
+    el.innerHTML += `
+      <div class="week-cell">
+        <div class="week-cell-label">${s.day}</div>
+        <div class="week-cell-box ${s.train ? 'train-day' : ''}">
+          <div class="week-cell-icon">${s.icon}</div>
+          <div class="week-cell-text">${s.train ? 'Training' : 'Ruhe'}</div>
+        </div>
+      </div>`;
+  });
+}
+
+function renderPhasePills() {
+  const el = document.getElementById('phase-pills');
+  PHASES.forEach((p, i) => {
+    const name = p.label.split(': ')[1];
+    el.innerHTML += `<div class="phase-pill"><strong>Phase ${i+1}</strong> · ${name}</div>`;
+  });
+}
+
+function renderWeeks() {
+  const el = document.getElementById('week-list');
+  const numWeeks = Math.ceil(50 / 7);
+  for (let w = 0; w < numWeeks; w++) {
+    const wNum = w + 1;
+    const weekDays = ALL_DAYS.slice(w*7, Math.min((w+1)*7, 50));
+    if (!weekDays.length) continue;
+    const daysHTML = weekDays.map(d => {
+      const isDone = !!checked[d.day];
+      const rowClass = isDone ? 'done-row' : (d.train ? 'train-row' : '');
+      const nameColor = isDone ? '#86efac' : '#cbd5e1';
+      const badgeHTML = d.train ? `<span class="phase-badge">P${d.phase}</span>` : '';
+      const descHTML  = d.desc  ? `<div class="day-desc">${d.desc}</div>` : '';
+      return `
+        <div class="day-row ${rowClass}" data-day="${d.day}" onclick="toggleDay(${d.day})">
+          <div class="day-check">${isDone ? '✓' : ''}</div>
+          <div class="day-info">
+            <div class="day-title">
+              <span class="day-num">T${d.day}</span>
+              <span class="day-name" style="color:${nameColor}">${d.dow} · ${d.icon} ${d.type}</span>
+              ${badgeHTML}
+            </div>
+            ${descHTML}
+          </div>
+        </div>`;
+    }).join('');
+
+    const done = weekDays.filter(d => checked[d.day]).length;
+    const allDone = done === weekDays.length;
+    el.innerHTML += `
+      <div class="week-block ${allDone ? 'all-done' : ''}" data-week="${wNum}">
+        <button class="week-header" onclick="toggleWeek(${wNum}, this)">
+          <span>Woche ${wNum} <span style="color:var(--dim);font-weight:400;font-size:12px">Tag ${weekDays[0].day}–${weekDays[weekDays.length-1].day}</span></span>
+          <div class="week-header-right">
+            <span class="week-count ${allDone ? 'done-color' : ''}">${done}/${weekDays.length} ✓</span>
+            <span class="week-chevron">▼</span>
+          </div>
+        </button>
+        <div class="week-days ${wNum === 1 ? 'open' : ''}" id="week-days-${wNum}">
+          ${daysHTML}
+        </div>
+      </div>`;
+  }
+}
+
+function toggleWeek(wNum, btn) {
+  const days = document.getElementById('week-days-' + wNum);
+  const chev = btn.querySelector('.week-chevron');
+  const isOpen = days.classList.toggle('open');
+  chev.textContent = isOpen ? '▲' : '▼';
+}
+
+function renderMeals() {
+  const el = document.getElementById('meal-list');
+  MEALS.forEach(m => {
+    const items = m.items.map(item => `
+      <div class="meal-option">
+        <div class="meal-dot" style="background:${m.color}"></div>
+        <span class="meal-text">${item}</span>
+      </div>`).join('');
+    el.innerHTML += `
+      <div class="card">
+        <div class="meal-title">${m.cat}</div>
+        ${items}
+      </div>`;
+  });
+}
+
+function renderTips() {
+  const el = document.getElementById('tips-list');
+  TIPS.forEach(t => {
+    el.innerHTML += `
+      <div class="tip-card">
+        <div class="tip-icon">${t.icon}</div>
+        <div>
+          <div class="tip-title">${t.t}</div>
+          <div class="tip-desc">${t.d}</div>
+        </div>
+      </div>`;
+  });
+}
+
+function renderFitnessTips() {
+  const el = document.getElementById('fitness-list');
+  FITNESS_TIPS.forEach(f => {
+    el.innerHTML += `
+      <div class="fitness-row">
+        <span class="fitness-tag">${f.tag}</span>
+        <span class="fitness-desc">${f.desc}</span>
+      </div>`;
+  });
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+
+renderWeekGrid();
+renderPhasePills();
+renderWeeks();
+renderMeals();
+renderTips();
+renderFitnessTips();
+updateProgress();
+</script>
+</body>
+</html>
