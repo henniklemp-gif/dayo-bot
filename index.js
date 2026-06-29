@@ -188,10 +188,16 @@ bot.on('voice', async (msg) => {
 
 // ── TEXTNACHRICHTEN → Intent-Erkennung + Claude-Chat ─────────────────────────
 
+// Emojis und Variation Selectors entfernen für robusten Key-Vergleich
+function stripEmojis(text) {
+  return text.replace(/[\p{Emoji}️‍]/gu, '').trim();
+}
+
+// Keys OHNE Emojis – müssen mit stripEmojis(buttonText) übereinstimmen
 const KEYBOARD_SHORTCUTS = {
-  '📅 Heute':    async (chatId) => { const [e, w] = await Promise.all([getTodayEvents(), getTodayWorkout()]); bot.sendMessage(chatId, formatDailyOverview(e, w), { parse_mode: 'Markdown' }); },
-  '📆 Woche':    async (chatId) => { bot.sendMessage(chatId, formatWeekOverview(await getWeekEvents()), { parse_mode: 'Markdown' }); },
-  'Training':    async (chatId) => {
+  'Heute':        async (chatId) => { const [e, w] = await Promise.all([getTodayEvents(), getTodayWorkout()]); bot.sendMessage(chatId, formatDailyOverview(e, w), { parse_mode: 'Markdown' }); },
+  'Woche':        async (chatId) => { bot.sendMessage(chatId, formatWeekOverview(await getWeekEvents()), { parse_mode: 'Markdown' }); },
+  'Training':     async (chatId) => {
     const workout = getTodayWorkout();
     const status  = getPlanStatus();
     if (!workout || !workout.train) {
@@ -209,21 +215,24 @@ const KEYBOARD_SHORTCUTS = {
   },
 };
 
-// Emojis und Variation Selectors aus dem Text entfernen, um robuster zu vergleichen
-function stripEmojis(text) {
-  return text.replace(/[\p{Emoji}️‍]/gu, '').trim();
+async function handleTextMessage(msg) {
+  const chatId = msg.chat.id;
+  const text   = msg.text;
+  try {
+    const key = stripEmojis(text.trim());
+    const shortcut = KEYBOARD_SHORTCUTS[key];
+    if (shortcut) { await shortcut(chatId); return; }
+    await handleTextIntent(chatId, text);
+  } catch (e) {
+    err(chatId, e);
+  }
 }
 
 bot.on('message', async (msg) => {
   if (!allowed(msg.from.id)) return;
   if (!msg.text || msg.text.startsWith('/')) return;
   if (msg.voice || msg.photo || msg.document) return;
-
-  const key = stripEmojis(msg.text.trim());
-  const shortcut = KEYBOARD_SHORTCUTS[key];
-  if (shortcut) { try { await shortcut(msg.chat.id); } catch (e) { err(msg.chat.id, e); } return; }
-
-  await handleTextIntent(msg.chat.id, msg.text);
+  await handleTextMessage(msg);
 });
 
 async function handleTextIntent(chatId, text) {
