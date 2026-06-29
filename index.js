@@ -158,25 +158,13 @@ bot.on('voice', async (msg) => {
   } catch (e) { err(chatId, e); }
 });
 
-// ── TEXTNACHRICHTEN → Claude ──────────────────────────────────────────────────
+// ── TEXTNACHRICHTEN → Intent-Erkennung + Claude-Chat ─────────────────────────
 
 bot.on('message', async (msg) => {
-  if (msg.text && msg.text.startsWith('/')) return;
+  if (!allowed(msg.from.id)) return;
+  if (!msg.text || msg.text.startsWith('/')) return;
   if (msg.voice || msg.photo || msg.document) return;
-
-  const chatId = msg.chat.id;
-
-  if (!ALLOWED_USERS.includes(String(chatId))) return;
-
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1000,
-    system: `Du bist Dayo, Henriks persönlicher Alltagsbegleiter.
-             Locker, freundlich, auf Deutsch. Kurze klare Antworten.`,
-    messages: [{ role: 'user', content: msg.text }]
-  });
-
-  bot.sendMessage(chatId, response.content[0].text);
+  await handleTextIntent(msg.chat.id, msg.text);
 });
 
 async function handleTextIntent(chatId, text) {
@@ -277,9 +265,16 @@ JSON-Format: {"intent": "...", "data": {...}}`,
         break;
       }
 
-      case 'chat':
-        bot.sendMessage(chatId, parsed.data.reply || '😄');
+      case 'chat': {
+        const chatResponse = await anthropic.messages.create({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          system: `Du bist Dayo, Henriks persönlicher Alltagsbegleiter. Locker, freundlich, auf Augenhöhe – wie ein guter Kumpel. Kurze klare Antworten auf Deutsch. Gerne mal ein Emoji, aber nicht übertreiben. Nenn ihn Henrik oder du.`,
+          messages: [{ role: 'user', content: text }],
+        });
+        bot.sendMessage(chatId, chatResponse.content[0].text);
         break;
+      }
 
       default:
         bot.sendMessage(chatId, 'Hmm, das hab ich nicht ganz einordnen können. Was kann ich für dich tun? 😊');
