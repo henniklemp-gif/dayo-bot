@@ -189,23 +189,38 @@ bot.on('voice', async (msg) => {
 // ── TEXTNACHRICHTEN → Intent-Erkennung + Claude-Chat ─────────────────────────
 
 const KEYBOARD_SHORTCUTS = {
-  '📅 Heute':       async (chatId) => { const [e, w] = await Promise.all([getTodayEvents(), getTodayWorkout()]); bot.sendMessage(chatId, formatDailyOverview(e, w), { parse_mode: 'Markdown' }); },
-  '📆 Woche':       async (chatId) => { bot.sendMessage(chatId, formatWeekOverview(await getWeekEvents()), { parse_mode: 'Markdown' }); },
-  '🏋️ Training':   async (chatId) => { bot.emit('text', { chat: { id: chatId }, text: '/training', from: { id: MY_ID } }); },
-  '🍽️ Kochen':     async (chatId) => handleCookingSuggestion(chatId),
-  '🧊 Kühlschrank': (chatId) => {
+  '📅 Heute':    async (chatId) => { const [e, w] = await Promise.all([getTodayEvents(), getTodayWorkout()]); bot.sendMessage(chatId, formatDailyOverview(e, w), { parse_mode: 'Markdown' }); },
+  '📆 Woche':    async (chatId) => { bot.sendMessage(chatId, formatWeekOverview(await getWeekEvents()), { parse_mode: 'Markdown' }); },
+  'Training':    async (chatId) => {
+    const workout = getTodayWorkout();
+    const status  = getPlanStatus();
+    if (!workout || !workout.train) {
+      bot.sendMessage(chatId, 'Heute ist Ruhetag – gönn dir! 😴\nVielleicht ein kurzer Spaziergang?');
+      return;
+    }
+    const dayInfo = status.active ? ` *(Tag ${status.planDay}/50, Phase ${status.phase})*` : '';
+    bot.sendMessage(chatId, `${workout.icon} *Heutiges Training*${dayInfo}\n\n*${workout.type}*\n_${workout.desc}_`, { parse_mode: 'Markdown' });
+  },
+  'Kochen':       async (chatId) => handleCookingSuggestion(chatId),
+  'Kühlschrank':  (chatId) => {
     const items = getFridgeContents();
     if (!items.length) { bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙'); return; }
     bot.sendMessage(chatId, `🧊 *Dein Kühlschrank:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`, { parse_mode: 'Markdown' });
   },
 };
 
+// Emojis und Variation Selectors aus dem Text entfernen, um robuster zu vergleichen
+function stripEmojis(text) {
+  return text.replace(/[\p{Emoji}️‍]/gu, '').trim();
+}
+
 bot.on('message', async (msg) => {
   if (!allowed(msg.from.id)) return;
   if (!msg.text || msg.text.startsWith('/')) return;
   if (msg.voice || msg.photo || msg.document) return;
 
-  const shortcut = KEYBOARD_SHORTCUTS[msg.text.trim()];
+  const key = stripEmojis(msg.text.trim());
+  const shortcut = KEYBOARD_SHORTCUTS[key];
   if (shortcut) { try { await shortcut(msg.chat.id); } catch (e) { err(msg.chat.id, e); } return; }
 
   await handleTextIntent(msg.chat.id, msg.text);
