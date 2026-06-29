@@ -33,6 +33,20 @@ function allowed(userId) {
   return ALLOWED_USERS.includes(userId);
 }
 
+// Interpretiert einen ISO-String (z.B. "2026-06-30T12:00:00") als Berliner Ortszeit
+// und gibt das korrekte UTC-Date-Objekt zurück.
+function parseBerlinTime(isoString) {
+  const probe = new Date(isoString + 'Z'); // als UTC lesen
+  const berlinStr = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Berlin',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  }).format(probe).replace(' ', 'T');
+  const offsetMs = new Date(berlinStr + 'Z').getTime() - probe.getTime();
+  return new Date(probe.getTime() - offsetMs);
+}
+
 function err(chatId, error) {
   console.error(error);
   bot.sendMessage(chatId, 'Hm, da hat was nicht geklappt – versuch\'s nochmal! 🙈');
@@ -163,11 +177,9 @@ bot.on('voice', async (msg) => {
   if (!allowed(msg.from.id)) return;
   const chatId = msg.chat.id;
   try {
-    bot.sendMessage(chatId, '🎙️ Ich höre...');
     const fileInfo = await bot.getFile(msg.voice.file_id);
     const fileUrl  = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileInfo.file_path}`;
     const text     = await transcribeVoice(fileUrl);
-    bot.sendMessage(chatId, `🎙️ "${text}"`);
     await handleTextIntent(chatId, text);
   } catch (e) {
     bot.sendMessage(chatId, 'Hm, die Sprachnachricht hab ich nicht verstanden 🙈');
@@ -243,7 +255,7 @@ JSON-Format: {"intent": "...", "data": {...}}`,
 
       case 'create_event': {
         const { title, startISO, durationMinutes = 60 } = parsed.data;
-        const start = new Date(startISO);
+        const start = parseBerlinTime(startISO);
         const end   = new Date(start.getTime() + durationMinutes * 60000);
         await createEvent(title, start, end);
         const dateStr = start.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Berlin' });
