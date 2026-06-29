@@ -222,3 +222,28 @@ export async function listCalendarNames() {
   const cals = await getCalendars();
   return cals.map(c => c.displayName || c.url);
 }
+
+export async function deleteEventByTitle(searchTitle, date) {
+  const c   = await getClient();
+  const cal = await getCalendarByName('Henrik');
+  if (!cal) throw new Error('Kalender "Henrik" nicht gefunden');
+
+  const objects = await c.fetchCalendarObjects({
+    calendar: cal,
+    timeRange: { start: startOfDay(date).toISOString(), end: endOfDay(date).toISOString() },
+  });
+
+  const lower = searchTitle.toLowerCase();
+  const match = objects.find(obj => {
+    const m = unfold(obj.data || '').match(/SUMMARY:([^\r\n]+)/);
+    return m ? unescape(m[1]).toLowerCase().includes(lower) : false;
+  });
+
+  if (!match) return null;
+
+  const titleMatch = unfold(match.data || '').match(/SUMMARY:([^\r\n]+)/);
+  const title = titleMatch ? unescape(titleMatch[1]) : searchTitle;
+
+  await c.deleteCalendarObject({ calendarObject: match });
+  return title;
+}

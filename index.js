@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import TelegramBot from 'node-telegram-bot-api';
 import Anthropic from '@anthropic-ai/sdk';
-import { getTodayEvents, getWeekEvents, createEvent } from './calendar.js';
+import { getTodayEvents, getWeekEvents, createEvent, deleteEventByTitle } from './calendar.js';
 import { getTodayWorkout, getStartDate, setStartDate, getPlanStatus } from './fitness.js';
 import { getFridgeContents, addItems, removeItem } from './fridge.js';
 import { initScheduler } from './scheduler.js';
@@ -14,6 +14,20 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const ALLOWED_USERS = process.env.ALLOWED_USERS.split(',').map(id => parseInt(id.trim(), 10));
 const MY_ID = parseInt(process.env.MY_TELEGRAM_ID, 10);
+
+const conversationHistory = {};
+
+const KEYBOARD = {
+  reply_markup: {
+    keyboard: [
+      ['📅 Heute', '📆 Woche'],
+      ['🏋️ Training', '🍽️ Kochen'],
+      ['🧊 Kühlschrank'],
+    ],
+    resize_keyboard: true,
+    persistent: true,
+  },
+};
 
 function allowed(userId) {
   return ALLOWED_USERS.includes(userId);
@@ -47,7 +61,7 @@ bot.onText(/\/start/, (msg) => {
     '"Ich habe die Milch aufgebraucht" → wird entfernt',
     '',
     '🎙️ *Sprachnachrichten funktionieren auch für alles!*',
-  ].join('\n'), { parse_mode: 'Markdown' });
+  ].join('\n'), { parse_mode: 'Markdown', ...KEYBOARD });
 });
 
 bot.onText(/\/heute/, async (msg) => {
@@ -148,22 +162,40 @@ bot.on('document', async (msg) => {
 bot.on('voice', async (msg) => {
   if (!allowed(msg.from.id)) return;
   const chatId = msg.chat.id;
-  const status = await bot.sendMessage(chatId, '🎙️ Ich höre...');
   try {
+    bot.sendMessage(chatId, '🎙️ Ich höre...');
     const fileInfo = await bot.getFile(msg.voice.file_id);
     const fileUrl  = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileInfo.file_path}`;
     const text     = await transcribeVoice(fileUrl);
-    await bot.editMessageText(`🎙️ _"${text}"_`, { chat_id: chatId, message_id: status.message_id, parse_mode: 'Markdown' });
+    bot.sendMessage(chatId, `🎙️ "${text}"`);
     await handleTextIntent(chatId, text);
-  } catch (e) { err(chatId, e); }
+  } catch (e) {
+    bot.sendMessage(chatId, 'Hm, die Sprachnachricht hab ich nicht verstanden 🙈');
+  }
 });
 
 // ── TEXTNACHRICHTEN → Intent-Erkennung + Claude-Chat ─────────────────────────
+
+const KEYBOARD_SHORTCUTS = {
+  '📅 Heute':       async (chatId) => { const [e, w] = await Promise.all([getTodayEvents(), getTodayWorkout()]); bot.sendMessage(chatId, formatDailyOverview(e, w), { parse_mode: 'Markdown' }); },
+  '📆 Woche':       async (chatId) => { bot.sendMessage(chatId, formatWeekOverview(await getWeekEvents()), { parse_mode: 'Markdown' }); },
+  '🏋️ Training':   async (chatId) => { bot.emit('text', { chat: { id: chatId }, text: '/training', from: { id: MY_ID } }); },
+  '🍽️ Kochen':     async (chatId) => handleCookingSuggestion(chatId),
+  '🧊 Kühlschrank': (chatId) => {
+    const items = getFridgeContents();
+    if (!items.length) { bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙'); return; }
+    bot.sendMessage(chatId, `🧊 *Dein Kühlschrank:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`, { parse_mode: 'Markdown' });
+  },
+};
 
 bot.on('message', async (msg) => {
   if (!allowed(msg.from.id)) return;
   if (!msg.text || msg.text.startsWith('/')) return;
   if (msg.voice || msg.photo || msg.document) return;
+
+  const shortcut = KEYBOARD_SHORTCUTS[msg.text.trim()];
+  if (shortcut) { try { await shortcut(msg.chat.id); } catch (e) { err(msg.chat.id, e); } return; }
+
   await handleTextIntent(msg.chat.id, msg.text);
 });
 
@@ -191,8 +223,9 @@ Intents:
 - remove_fridge: Lebensmittel aus Kühlschrank entfernen → data: { items: string[] }
 - query_fridge: Kühlschrank anzeigen → data: {}
 - cooking_suggestion: Kochvorschlag → data: {}
+- delete_event: Termin löschen → data: { title: string, dateISO: "YYYY-MM-DD" }
 - set_fitness_start: Fitness-Startdatum setzen → data: { dateISO: "YYYY-MM-DD" }
-- chat: Allgemeines Gespräch → data: { reply: string (Deutsch, locker, kurz) }
+- chat: Allgemeines Gespräch → data: {}
 
 JSON-Format: {"intent": "...", "data": {...}}`,
       }],
@@ -257,6 +290,17 @@ JSON-Format: {"intent": "...", "data": {...}}`,
         await handleCookingSuggestion(chatId);
         break;
 
+      case 'delete_event': {
+        const { title, dateISO } = parsed.data;
+        const deleted = await deleteEventByTitle(title, new Date(dateISO));
+        if (deleted) {
+          bot.sendMessage(chatId, `🗑️ Gelöscht: *${deleted}*`, { parse_mode: 'Markdown' });
+        } else {
+          bot.sendMessage(chatId, `Hmm, ich hab keinen Termin gefunden der zu "${title}" passt. 🤔`);
+        }
+        break;
+      }
+
       case 'set_fitness_start': {
         const { dateISO } = parsed.data;
         setStartDate(new Date(dateISO));
@@ -266,13 +310,20 @@ JSON-Format: {"intent": "...", "data": {...}}`,
       }
 
       case 'chat': {
+        if (!conversationHistory[chatId]) conversationHistory[chatId] = [];
+        conversationHistory[chatId].push({ role: 'user', content: text });
+        if (conversationHistory[chatId].length > 10) conversationHistory[chatId].shift();
+
         const chatResponse = await anthropic.messages.create({
           model: 'claude-sonnet-4-6',
           max_tokens: 1000,
-          system: `Du bist Dayo, Henriks persönlicher Alltagsbegleiter. Locker, freundlich, auf Augenhöhe – wie ein guter Kumpel. Kurze klare Antworten auf Deutsch. Gerne mal ein Emoji, aber nicht übertreiben. Nenn ihn Henrik oder du.`,
-          messages: [{ role: 'user', content: text }],
+          system: `Du bist Dayo, Henriks persönlicher Alltagsbegleiter. Locker, freundlich, auf Augenhöhe – wie ein guter Kumpel. Kurze klare Antworten auf Deutsch. Gerne mal ein Emoji, aber nicht übertreiben. Nenn ihn Henrik oder du. Heute ist ${new Date().toLocaleDateString('de-DE')}.`,
+          messages: conversationHistory[chatId],
         });
-        bot.sendMessage(chatId, chatResponse.content[0].text);
+
+        const reply = chatResponse.content[0].text;
+        conversationHistory[chatId].push({ role: 'assistant', content: reply });
+        bot.sendMessage(chatId, reply);
         break;
       }
 
