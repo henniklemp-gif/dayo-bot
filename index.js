@@ -174,7 +174,8 @@ bot.on('document', async (msg) => {
 // ── SPRACHNACHRICHTEN ─────────────────────────────────────────────────────────
 
 bot.on('voice', async (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!ALLOWED_USERS.includes(String(msg.chat.id))) return;
+  msg.handled = true;
   const chatId = msg.chat.id;
   try {
     const fileInfo = await bot.getFile(msg.voice.file_id);
@@ -229,9 +230,10 @@ async function handleTextMessage(msg) {
 }
 
 bot.on('message', async (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (msg.handled) return;
+  if (msg.voice) return;
   if (!msg.text || msg.text.startsWith('/')) return;
-  if (msg.voice || msg.photo || msg.document) return;
+  if (!ALLOWED_USERS.includes(String(msg.chat.id))) return;
   await handleTextMessage(msg);
 });
 
