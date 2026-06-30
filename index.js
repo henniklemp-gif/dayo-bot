@@ -8,12 +8,14 @@ import { initScheduler } from './scheduler.js';
 import { analyzeReceipt } from './vision.js';
 import { transcribeVoice } from './voice.js';
 import { formatDailyOverview, formatWeekOverview } from './format.js';
+import { startServer } from './server.js';
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const ALLOWED_USERS = process.env.ALLOWED_USERS.split(',').map(id => parseInt(id.trim(), 10));
 const MY_ID = parseInt(process.env.MY_TELEGRAM_ID, 10);
+const WEBAPP_URL = process.env.WEBAPP_URL;
 
 const conversationHistory = {};
 
@@ -115,12 +117,15 @@ bot.onText(/\/training/, async (msg) => {
 bot.onText(/\/kuehlschrank/, (msg) => {
   if (!allowed(msg.from.id)) return;
   const items = getFridgeContents();
+  const webAppMarkup = WEBAPP_URL ? {
+    inline_keyboard: [[{ text: '🧊 Kühlschrank öffnen', web_app: { url: WEBAPP_URL } }]]
+  } : undefined;
   if (items.length === 0) {
-    bot.sendMessage(msg.chat.id, 'Dein Kühlschrank ist leer! 🫙 Schick mir einen Kassenbon zum Befüllen.');
+    bot.sendMessage(msg.chat.id, 'Dein Kühlschrank ist leer! 🫙 Schick mir einen Kassenbon zum Befüllen.', webAppMarkup ? { reply_markup: webAppMarkup } : {});
     return;
   }
   const list = items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n');
-  bot.sendMessage(msg.chat.id, `🧊 *Dein Kühlschrank:*\n\n${list}`, { parse_mode: 'Markdown' });
+  bot.sendMessage(msg.chat.id, `🧊 *Dein Kühlschrank:*\n\n${list}`, { parse_mode: 'Markdown', ...(webAppMarkup && { reply_markup: webAppMarkup }) });
 });
 
 bot.onText(/\/kochen/, async (msg) => {
@@ -211,8 +216,11 @@ const KEYBOARD_SHORTCUTS = {
   'Kochen':       async (chatId) => handleCookingSuggestion(chatId),
   'Kühlschrank':  (chatId) => {
     const items = getFridgeContents();
-    if (!items.length) { bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙'); return; }
-    bot.sendMessage(chatId, `🧊 *Dein Kühlschrank:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`, { parse_mode: 'Markdown' });
+    const webAppMarkup = WEBAPP_URL ? {
+      inline_keyboard: [[{ text: '🧊 Kühlschrank öffnen', web_app: { url: WEBAPP_URL } }]]
+    } : undefined;
+    if (!items.length) { bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙', webAppMarkup ? { reply_markup: webAppMarkup } : {}); return; }
+    bot.sendMessage(chatId, `🧊 *Dein Kühlschrank:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`, { parse_mode: 'Markdown', ...(webAppMarkup && { reply_markup: webAppMarkup }) });
   },
 };
 
@@ -409,4 +417,5 @@ Fitness-Kontext: ${trainingCtx} Kalorienziel: 2.200–2.400 kcal/Tag, 150–170 
 // ── START ─────────────────────────────────────────────────────────────────────
 
 initScheduler(bot, MY_ID);
+startServer();
 console.log('🤖 Dayo läuft!');

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Kühlschrank</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--tg-theme-bg-color, #fff);
+      color: var(--tg-theme-text-color, #000);
+      min-height: 100vh;
+      padding-bottom: 24px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      background: var(--tg-theme-bg-color, #fff);
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--tg-theme-hint-color, #ccc);
+      font-size: 18px;
+      font-weight: 600;
+      z-index: 10;
+    }
+
+    #items-list {
+      padding: 8px 12px;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--tg-theme-hint-color, #eee);
+      opacity: 1;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .item.removing {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+
+    .item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-name {
+      font-size: 16px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-qty {
+      font-size: 13px;
+      color: var(--tg-theme-hint-color, #888);
+      margin-top: 2px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.1s, background 0.2s;
+      background: transparent;
+    }
+
+    .btn:active { transform: scale(0.88); }
+
+    .bring-btn {
+      color: var(--tg-theme-button-color, #2481cc);
+      background: color-mix(in srgb, var(--tg-theme-button-color, #2481cc) 12%, transparent);
+    }
+
+    .bring-btn.done {
+      background: color-mix(in srgb, #34c759 20%, transparent);
+      color: #34c759;
+    }
+
+    .remove-btn {
+      background: color-mix(in srgb, #ff3b30 12%, transparent);
+      color: #ff3b30;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--tg-theme-hint-color, #888);
+    }
+
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+
+    .spinner {
+      text-align: center;
+      padding: 60px;
+      font-size: 28px;
+    }
+  </style>
+</head>
+<body>
+  <header>🧊 Kühlschrank</header>
+  <div id="items-list"><div class="spinner">⏳</div></div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    const initData = tg.initData || '';
+    const headers = { 'Authorization': initData, 'Content-Type': 'application/json' };
+
+    async function loadItems() {
+      try {
+        const res = await fetch('/api/fridge', { headers });
+        const items = await res.json();
+        renderItems(items);
+      } catch {
+        document.getElementById('items-list').innerHTML =
+          '<div class="empty-state"><div class="icon">⚠️</div><p>Fehler beim Laden</p></div>';
+      }
+    }
+
+    function renderItems(items) {
+      const container = document.getElementById('items-list');
+      if (!items.length) {
+        container.innerHTML =
+          '<div class="empty-state"><div class="icon">🫙</div><p>Kühlschrank ist leer</p></div>';
+        return;
+      }
+      container.innerHTML = items.map(item => {
+        const qty = item.quantity != null
+          ? `${item.quantity}${item.unit ? ' ' + item.unit : ''}`
+          : '';
+        return `
+          <div class="item" data-name="${escHtml(item.name)}">
+            <div class="item-info">
+              <div class="item-name">${escHtml(item.name)}</div>
+              ${qty ? `<div class="item-qty">${escHtml(qty)}</div>` : ''}
+            </div>
+            <button class="btn bring-btn" title="Zu Bring! hinzufügen">🛒</button>
+            <button class="btn remove-btn" title="Verbraucht">✓</button>
+          </div>`;
+      }).join('');
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    async function removeItem(name, el) {
+      el.classList.add('removing');
+      await fetch(`/api/fridge/${encodeURIComponent(name)}`, { method: 'DELETE', headers });
+      setTimeout(() => el.remove(), 200);
+      tg.HapticFeedback?.notificationOccurred('success');
+      setTimeout(() => {
+        if (!document.querySelector('.item')) renderItems([]);
+      }, 250);
+    }
+
+    async function addToBring(name, btn) {
+      btn.disabled = true;
+      try {
+        await fetch('/api/fridge/bring', {
+          method: 'POST', headers,
+          body: JSON.stringify({ name }),
+        });
+        btn.classList.add('done');
+        btn.textContent = '✓';
+        tg.HapticFeedback?.notificationOccurred('success');
+      } catch {
+        btn.disabled = false;
+        tg.HapticFeedback?.notificationOccurred('error');
+      }
+    }
+
+    document.getElementById('items-list').addEventListener('click', e => {
+      const itemEl = e.target.closest('.item');
+      if (!itemEl) return;
+      const name = itemEl.dataset.name;
+      if (e.target.closest('.remove-btn')) removeItem(name, itemEl);
+      else if (e.target.closest('.bring-btn')) addToBring(name, e.target.closest('.bring-btn'));
+    });
+
+    loadItems();
+  </script>
+</body>
+</html>

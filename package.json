@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "bring-api": "^1.0.2",
     "dotenv": "^16.4.7",
+    "express": "^4.19.0",
     "node-cron": "^3.0.3",
     "node-telegram-bot-api": "^0.66.0",
     "openai": "^4.85.0",
