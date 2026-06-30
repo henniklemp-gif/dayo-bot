@@ -174,7 +174,7 @@ bot.on('document', async (msg) => {
 // ── SPRACHNACHRICHTEN ─────────────────────────────────────────────────────────
 
 bot.on('voice', async (msg) => {
-  if (!ALLOWED_USERS.includes(String(msg.chat.id))) return;
+  if (!allowed(msg.from.id)) return;
   msg.handled = true;
   const chatId = msg.chat.id;
   try {
@@ -233,7 +233,7 @@ bot.on('message', async (msg) => {
   if (msg.handled) return;
   if (msg.voice) return;
   if (!msg.text || msg.text.startsWith('/')) return;
-  if (!ALLOWED_USERS.includes(String(msg.chat.id))) return;
+  if (!allowed(msg.from.id)) return;
   await handleTextMessage(msg);
 });
 
