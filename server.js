@@ -2,7 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { getFridgeContents, removeItem, adjustItem } from './fridge.js';
+import { getFridgeContents, removeItem, adjustItem, undoLastChange } from './fridge.js';
 import { addToBring } from './bring.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -56,6 +56,11 @@ app.patch('/api/fridge/:name', authMiddleware, (req, res) => {
   if (isNaN(delta)) return res.status(400).json({ error: 'delta required' });
   const result = adjustItem(name, delta);
   res.json(result);
+});
+
+app.post('/api/fridge/undo', authMiddleware, (req, res) => {
+  const success = undoLastChange();
+  res.json({ success, items: getFridgeContents() });
 });
 
 app.post('/api/fridge/bring', authMiddleware, async (req, res) => {

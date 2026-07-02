@@ -14,9 +14,21 @@ function load() {
   }
 }
 
+let snapshot = null;
+
 function save(data) {
+  if (existsSync(FILE)) {
+    try { snapshot = readFileSync(FILE, 'utf8'); } catch { snapshot = null; }
+  }
   data.updatedAt = new Date().toISOString();
   writeFileSync(FILE, JSON.stringify(data, null, 2));
+}
+
+export function undoLastChange() {
+  if (!snapshot) return false;
+  writeFileSync(FILE, snapshot);
+  snapshot = null;
+  return true;
 }
 
 export function getFridgeContents() {
