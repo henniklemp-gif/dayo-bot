@@ -116,16 +116,19 @@ bot.onText(/\/training/, async (msg) => {
 
 bot.onText(/\/kuehlschrank/, (msg) => {
   if (!allowed(msg.from.id)) return;
+  if (WEBAPP_URL) {
+    bot.sendMessage(msg.chat.id, '🧊 Kühlschrank öffnen:', {
+      reply_markup: { inline_keyboard: [[{ text: '🧊 Kühlschrank öffnen', web_app: { url: WEBAPP_URL } }]] }
+    });
+    return;
+  }
   const items = getFridgeContents();
-  const webAppMarkup = WEBAPP_URL ? {
-    inline_keyboard: [[{ text: '🧊 Kühlschrank öffnen', web_app: { url: WEBAPP_URL } }]]
-  } : undefined;
   if (items.length === 0) {
-    bot.sendMessage(msg.chat.id, 'Dein Kühlschrank ist leer! 🫙 Schick mir einen Kassenbon zum Befüllen.', webAppMarkup ? { reply_markup: webAppMarkup } : {});
+    bot.sendMessage(msg.chat.id, 'Dein Kühlschrank ist leer! 🫙 Schick mir einen Kassenbon zum Befüllen.');
     return;
   }
   const list = items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n');
-  bot.sendMessage(msg.chat.id, `🧊 *Dein Kühlschrank:*\n\n${list}`, { parse_mode: 'Markdown', ...(webAppMarkup && { reply_markup: webAppMarkup }) });
+  bot.sendMessage(msg.chat.id, `🧊 *Dein Kühlschrank:*\n\n${list}`, { parse_mode: 'Markdown' });
 });
 
 bot.onText(/\/kochen/, async (msg) => {
@@ -215,12 +218,15 @@ const KEYBOARD_SHORTCUTS = {
   },
   'Kochen':       async (chatId) => handleCookingSuggestion(chatId),
   'Kühlschrank':  (chatId) => {
+    if (WEBAPP_URL) {
+      bot.sendMessage(chatId, '🧊 Kühlschrank öffnen:', {
+        reply_markup: { inline_keyboard: [[{ text: '🧊 Kühlschrank öffnen', web_app: { url: WEBAPP_URL } }]] }
+      });
+      return;
+    }
     const items = getFridgeContents();
-    const webAppMarkup = WEBAPP_URL ? {
-      inline_keyboard: [[{ text: '🧊 Kühlschrank öffnen', web_app: { url: WEBAPP_URL } }]]
-    } : undefined;
-    if (!items.length) { bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙', webAppMarkup ? { reply_markup: webAppMarkup } : {}); return; }
-    bot.sendMessage(chatId, `🧊 *Dein Kühlschrank:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`, { parse_mode: 'Markdown', ...(webAppMarkup && { reply_markup: webAppMarkup }) });
+    if (!items.length) { bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙'); return; }
+    bot.sendMessage(chatId, `🧊 *Dein Kühlschrank:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`, { parse_mode: 'Markdown' });
   },
 };
 
@@ -322,6 +328,12 @@ JSON-Format: {"intent": "...", "data": {...}}`,
       }
 
       case 'query_fridge': {
+        if (WEBAPP_URL) {
+          bot.sendMessage(chatId, '🧊 Kühlschrank öffnen:', {
+            reply_markup: { inline_keyboard: [[{ text: '🧊 Kühlschrank öffnen', web_app: { url: WEBAPP_URL } }]] }
+          });
+          break;
+        }
         const contents = getFridgeContents();
         if (contents.length === 0) {
           bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙');
