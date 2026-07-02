@@ -54,6 +54,20 @@ export function removeItem(name) {
   return data.items.length < before;
 }
 
+export function decrementItem(name, amount = 1) {
+  const data = load();
+  const item = data.items.find(i => i.name.toLowerCase() === name.toLowerCase().trim());
+  if (!item) return { found: false };
+  if (item.quantity === null || item.quantity - amount <= 0) {
+    data.items = data.items.filter(i => i !== item);
+    save(data);
+    return { found: true, removed: true };
+  }
+  item.quantity = parseFloat((item.quantity - amount).toFixed(3));
+  save(data);
+  return { found: true, removed: false, newQuantity: item.quantity };
+}
+
 export function clearFridge() {
   save({ items: [] });
 }

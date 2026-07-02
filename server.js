@@ -2,7 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { getFridgeContents, removeItem } from './fridge.js';
+import { getFridgeContents, removeItem, decrementItem } from './fridge.js';
 import { addToBring } from './bring.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -48,6 +48,13 @@ app.delete('/api/fridge/:name', authMiddleware, (req, res) => {
   const name = decodeURIComponent(req.params.name);
   const removed = removeItem(name);
   res.json({ success: removed });
+});
+
+app.patch('/api/fridge/:name', authMiddleware, (req, res) => {
+  const name = decodeURIComponent(req.params.name);
+  const amount = parseFloat(req.body.amount) || 1;
+  const result = decrementItem(name, amount);
+  res.json(result);
 });
 
 app.post('/api/fridge/bring', authMiddleware, async (req, res) => {

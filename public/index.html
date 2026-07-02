@@ -148,7 +148,7 @@
           ? `${item.quantity}${item.unit ? ' ' + item.unit : ''}`
           : '';
         return `
-          <div class="item" data-name="${escHtml(item.name)}">
+          <div class="item" data-name="${escHtml(item.name)}" data-quantity="${item.quantity ?? ''}" data-unit="${escHtml(item.unit ?? '')}">
             <div class="item-info">
               <div class="item-name">${escHtml(item.name)}</div>
               ${qty ? `<div class="item-qty">${escHtml(qty)}</div>` : ''}
@@ -166,11 +166,32 @@
     async function removeItem(name, el) {
       el.classList.add('removing');
       await fetch(`/api/fridge/${encodeURIComponent(name)}`, { method: 'DELETE', headers });
-      setTimeout(() => el.remove(), 200);
-      tg.HapticFeedback?.notificationOccurred('success');
       setTimeout(() => {
+        el.remove();
         if (!document.querySelector('.item')) renderItems([]);
-      }, 250);
+      }, 200);
+      tg.HapticFeedback?.notificationOccurred('success');
+    }
+
+    async function consumeOne(name, itemEl) {
+      const rawQty = itemEl.dataset.quantity;
+      const qty = rawQty !== '' ? parseFloat(rawQty) : null;
+
+      if (qty === null || qty <= 1) {
+        removeItem(name, itemEl);
+        return;
+      }
+
+      const newQty = parseFloat((qty - 1).toFixed(3));
+      itemEl.dataset.quantity = newQty;
+      const unit = itemEl.dataset.unit;
+      const qtyEl = itemEl.querySelector('.item-qty');
+      if (qtyEl) qtyEl.textContent = `${newQty}${unit ? ' ' + unit : ''}`;
+
+      tg.HapticFeedback?.notificationOccurred('success');
+      await fetch(`/api/fridge/${encodeURIComponent(name)}`, {
+        method: 'PATCH', headers, body: JSON.stringify({ amount: 1 }),
+      });
     }
 
     async function addToBring(name, btn) {
@@ -193,7 +214,7 @@
       const itemEl = e.target.closest('.item');
       if (!itemEl) return;
       const name = itemEl.dataset.name;
-      if (e.target.closest('.remove-btn')) removeItem(name, itemEl);
+      if (e.target.closest('.remove-btn')) consumeOne(name, itemEl);
       else if (e.target.closest('.bring-btn')) addToBring(name, e.target.closest('.bring-btn'));
     });
 
