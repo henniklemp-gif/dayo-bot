@@ -97,6 +97,39 @@
       color: #ff3b30;
     }
 
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 20px;
+      font-weight: 400;
+    }
+
+    .minus-btn {
+      background: color-mix(in srgb, #ff3b30 12%, transparent);
+      color: #ff3b30;
+    }
+
+    .plus-btn {
+      background: color-mix(in srgb, #34c759 12%, transparent);
+      color: #34c759;
+    }
+
+    .qty-display {
+      min-width: 36px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--tg-theme-text-color, #000);
+    }
+
     .empty-state {
       text-align: center;
       padding: 60px 24px;
@@ -144,17 +177,22 @@
         return;
       }
       container.innerHTML = items.map(item => {
-        const qty = item.quantity != null
-          ? `${item.quantity}${item.unit ? ' ' + item.unit : ''}`
-          : '';
+        const hasQty = item.quantity != null;
+        const unit = item.unit ?? '';
+        const controls = hasQty
+          ? `<div class="qty-control">
+               <button class="btn qty-btn minus-btn" title="Weniger">−</button>
+               <span class="qty-display">${item.quantity}${unit ? '&nbsp;' + escHtml(unit) : ''}</span>
+               <button class="btn qty-btn plus-btn" title="Mehr">+</button>
+             </div>`
+          : `<button class="btn remove-btn" title="Verbraucht">✓</button>`;
         return `
-          <div class="item" data-name="${escHtml(item.name)}" data-quantity="${item.quantity ?? ''}" data-unit="${escHtml(item.unit ?? '')}">
+          <div class="item" data-name="${escHtml(item.name)}" data-quantity="${hasQty ? item.quantity : ''}" data-unit="${escHtml(unit)}">
             <div class="item-info">
               <div class="item-name">${escHtml(item.name)}</div>
-              ${qty ? `<div class="item-qty">${escHtml(qty)}</div>` : ''}
             </div>
             <button class="btn bring-btn" title="Zu Bring! hinzufügen">🛒</button>
-            <button class="btn remove-btn" title="Verbraucht">✓</button>
+            ${controls}
           </div>`;
       }).join('');
     }
@@ -173,24 +211,31 @@
       tg.HapticFeedback?.notificationOccurred('success');
     }
 
-    async function consumeOne(name, itemEl) {
+    async function adjustQty(name, itemEl, delta) {
       const rawQty = itemEl.dataset.quantity;
       const qty = rawQty !== '' ? parseFloat(rawQty) : null;
+      const unit = itemEl.dataset.unit;
+      const newQty = qty !== null ? parseFloat((qty + delta).toFixed(3)) : (delta > 0 ? delta : 0);
 
-      if (qty === null || qty <= 1) {
-        removeItem(name, itemEl);
+      if (newQty <= 0) {
+        itemEl.classList.add('removing');
+        setTimeout(() => {
+          itemEl.remove();
+          if (!document.querySelector('.item')) renderItems([]);
+        }, 200);
+        tg.HapticFeedback?.notificationOccurred('success');
+        fetch(`/api/fridge/${encodeURIComponent(name)}`, {
+          method: 'PATCH', headers, body: JSON.stringify({ delta }),
+        });
         return;
       }
 
-      const newQty = parseFloat((qty - 1).toFixed(3));
       itemEl.dataset.quantity = newQty;
-      const unit = itemEl.dataset.unit;
-      const qtyEl = itemEl.querySelector('.item-qty');
-      if (qtyEl) qtyEl.textContent = `${newQty}${unit ? ' ' + unit : ''}`;
-
+      const display = itemEl.querySelector('.qty-display');
+      if (display) display.textContent = `${newQty}${unit ? ' ' + unit : ''}`;
       tg.HapticFeedback?.notificationOccurred('success');
-      await fetch(`/api/fridge/${encodeURIComponent(name)}`, {
-        method: 'PATCH', headers, body: JSON.stringify({ amount: 1 }),
+      fetch(`/api/fridge/${encodeURIComponent(name)}`, {
+        method: 'PATCH', headers, body: JSON.stringify({ delta }),
       });
     }
 
@@ -214,8 +259,10 @@
       const itemEl = e.target.closest('.item');
       if (!itemEl) return;
       const name = itemEl.dataset.name;
-      if (e.target.closest('.remove-btn')) consumeOne(name, itemEl);
+      if (e.target.closest('.remove-btn')) removeItem(name, itemEl);
       else if (e.target.closest('.bring-btn')) addToBring(name, e.target.closest('.bring-btn'));
+      else if (e.target.closest('.minus-btn')) adjustQty(name, itemEl, -1);
+      else if (e.target.closest('.plus-btn')) adjustQty(name, itemEl, 1);
     });
 
     loadItems();

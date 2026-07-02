@@ -2,7 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { getFridgeContents, removeItem, decrementItem } from './fridge.js';
+import { getFridgeContents, removeItem, adjustItem } from './fridge.js';
 import { addToBring } from './bring.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -52,8 +52,9 @@ app.delete('/api/fridge/:name', authMiddleware, (req, res) => {
 
 app.patch('/api/fridge/:name', authMiddleware, (req, res) => {
   const name = decodeURIComponent(req.params.name);
-  const amount = parseFloat(req.body.amount) || 1;
-  const result = decrementItem(name, amount);
+  const delta = parseFloat(req.body.delta);
+  if (isNaN(delta)) return res.status(400).json({ error: 'delta required' });
+  const result = adjustItem(name, delta);
   res.json(result);
 });
 

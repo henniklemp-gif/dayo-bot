@@ -54,16 +54,19 @@ export function removeItem(name) {
   return data.items.length < before;
 }
 
-export function decrementItem(name, amount = 1) {
+export function adjustItem(name, delta) {
   const data = load();
   const item = data.items.find(i => i.name.toLowerCase() === name.toLowerCase().trim());
   if (!item) return { found: false };
-  if (item.quantity === null || item.quantity - amount <= 0) {
+  const newQty = item.quantity === null
+    ? (delta > 0 ? delta : 0)
+    : parseFloat((parseFloat(item.quantity) + delta).toFixed(3));
+  if (newQty <= 0) {
     data.items = data.items.filter(i => i !== item);
     save(data);
     return { found: true, removed: true };
   }
-  item.quantity = parseFloat((item.quantity - amount).toFixed(3));
+  item.quantity = newQty;
   save(data);
   return { found: true, removed: false, newQuantity: item.quantity };
 }
