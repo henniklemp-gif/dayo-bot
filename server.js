@@ -89,7 +89,13 @@ app.post('/api/fridge/bring', authMiddleware, async (req, res) => {
 
 export function registerBotWebhook(bot) {
   app.post('/webhook', (req, res) => {
-    bot.processUpdate(req.body);
+    const body = req.body;
+    const type = body?.message?.document ? 'document' :
+                 body?.message?.photo    ? 'photo' :
+                 body?.message?.text     ? 'text' :
+                 body?.message?.voice    ? 'voice' : 'other';
+    console.log(`[webhook] Update: ${type} (update_id=${body?.update_id})`);
+    bot.processUpdate(body);
     res.sendStatus(200);
   });
 }
