@@ -83,6 +83,13 @@ export function adjustItem(name, delta) {
   return { found: true, removed: false, newQuantity: item.quantity };
 }
 
+export function removeItems(names) {
+  const data = load();
+  const lowers = names.map(n => n.toLowerCase().trim());
+  data.items = data.items.filter(i => !lowers.includes(i.name.toLowerCase()));
+  save(data);
+}
+
 export function clearFridge() {
   save({ items: [] });
 }

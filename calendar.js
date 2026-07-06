@@ -44,6 +44,20 @@ function unescape(val) {
     .replace(/\\\\/g, '\\');
 }
 
+function berlinLocalToUTC(y, mo, d, h, m, s) {
+  // Interpretiert die Zahlen als Europe/Berlin-Ortszeit und gibt UTC zurück
+  const isoStr = `${y}-${String(mo + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  const probe = new Date(isoStr + 'Z');
+  const berlinStr = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Berlin',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  }).format(probe).replace(' ', 'T');
+  const offsetMs = new Date(berlinStr + 'Z').getTime() - probe.getTime();
+  return new Date(probe.getTime() - offsetMs);
+}
+
 function parseICSDateTime(raw) {
   const value = raw.includes(':') ? raw.split(':').pop() : raw;
   if (value.length === 8) {
@@ -62,10 +76,15 @@ function parseICSDateTime(raw) {
   const h  = parseInt(value.slice(9, 11));
   const m  = parseInt(value.slice(11, 13));
   const s  = parseInt(value.slice(13, 15) || '0');
-  const date = value.endsWith('Z')
-    ? new Date(Date.UTC(y, mo, d, h, m, s))
-    : new Date(y, mo, d, h, m, s);
-  return { date, allDay: false };
+  if (value.endsWith('Z')) {
+    return { date: new Date(Date.UTC(y, mo, d, h, m, s)), allDay: false };
+  }
+  // TZID vorhanden → als Europe/Berlin-Ortszeit interpretieren
+  if (/TZID=/i.test(raw)) {
+    return { date: berlinLocalToUTC(y, mo, d, h, m, s), allDay: false };
+  }
+  // Kein Z, kein TZID → lokale Serverzeit (Fallback)
+  return { date: new Date(y, mo, d, h, m, s), allDay: false };
 }
 
 function parseVEvents(icsData, calendarName) {

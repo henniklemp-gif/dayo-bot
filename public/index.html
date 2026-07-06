@@ -13,21 +13,31 @@
       background: var(--tg-theme-bg-color, #fff);
       color: var(--tg-theme-text-color, #000);
       min-height: 100vh;
-      padding-bottom: 24px;
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      overscroll-behavior: none;
     }
 
-    header {
+    /* ── Sticky top ──────────────────────────────────────────────────────────── */
+
+    .sticky-top {
       position: sticky;
       top: 0;
       background: var(--tg-theme-bg-color, #fff);
-      padding: 16px 16px 12px;
-      border-bottom: 1px solid var(--tg-theme-hint-color, #ccc);
-      font-size: 18px;
-      font-weight: 600;
-      z-index: 10;
+      z-index: 20;
+      padding-bottom: 8px;
+      border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #ccc) 25%, transparent);
+    }
+
+    header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 14px 16px 8px;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
     }
 
     .undo-btn {
@@ -40,33 +50,108 @@
       color: var(--tg-theme-link-color, #2481cc);
       opacity: 0.25;
       transition: opacity 0.2s;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .undo-btn:not(:disabled) { opacity: 1; }
+    .undo-btn:not(:disabled):active { transform: scale(0.88); }
+
+    #search-wrap { padding: 0 12px; }
+
+    #search {
+      width: 100%;
+      padding: 9px 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+      color: var(--tg-theme-text-color, #000);
+      font-size: 15px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    #search::placeholder { color: var(--tg-theme-hint-color, #8e8e93); }
+
+    /* ── Skeleton ────────────────────────────────────────────────────────────── */
+
+    .skeleton-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 16px;
+      border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #ccc) 18%, transparent);
     }
 
-    .undo-btn:not(:disabled) {
-      opacity: 1;
+    .skel {
+      background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+      background: linear-gradient(
+        90deg,
+        var(--tg-theme-secondary-bg-color, #f0f0f0) 25%,
+        color-mix(in srgb, var(--tg-theme-secondary-bg-color, #f0f0f0) 55%, var(--tg-theme-bg-color, #fff)) 50%,
+        var(--tg-theme-secondary-bg-color, #f0f0f0) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 6px;
     }
 
-    .undo-btn:not(:disabled):active {
-      transform: scale(0.88);
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
 
-    #items-list {
-      padding: 8px 12px;
+    .skel-emoji { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
+    .skel-text  { height: 16px; flex: 1; }
+    .skel-btn   { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; }
+
+    /* ── Items ───────────────────────────────────────────────────────────────── */
+
+    .item-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .swipe-bg {
+      position: absolute;
+      inset: 0 0 0 auto;
+      width: 72px;
+      background: #ff3b30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #fff;
     }
 
     .item {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 12px 10px;
-      border-bottom: 1px solid var(--tg-theme-hint-color, #eee);
-      opacity: 1;
-      transition: opacity 0.2s, transform 0.2s;
+      padding: 11px 12px;
+      border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #ccc) 18%, transparent);
+      background: var(--tg-theme-bg-color, #fff);
+      will-change: transform;
+      touch-action: pan-y;
+      transition: opacity 0.2s;
     }
+
+    .item.swiping { transition: none; }
 
     .item.removing {
       opacity: 0;
-      transform: translateX(30px);
+      transform: translateX(100%);
+      transition: transform 0.22s ease, opacity 0.22s;
+    }
+
+    .item.zeroed { opacity: 0.55; }
+    .item.zeroed .item-name { text-decoration: line-through; }
+
+    .item-emoji {
+      font-size: 26px;
+      width: 36px;
+      text-align: center;
+      line-height: 1;
+      flex-shrink: 0;
+      user-select: none;
     }
 
     .item-info {
@@ -75,44 +160,50 @@
     }
 
     .item-name {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 500;
-      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .item-qty {
-      font-size: 13px;
-      color: var(--tg-theme-hint-color, #888);
-      margin-top: 2px;
-    }
+    /* ── Buttons ─────────────────────────────────────────────────────────────── */
 
     .btn {
       border: none;
-      border-radius: 8px;
+      border-radius: 9px;
       cursor: pointer;
-      font-size: 18px;
-      width: 38px;
-      height: 38px;
+      font-size: 17px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: transform 0.1s, background 0.2s;
       background: transparent;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      transition: transform 0.1s;
     }
-
-    .btn:active { transform: scale(0.88); }
+    .btn:active { transform: scale(0.84); }
 
     .bring-btn {
       color: var(--tg-theme-button-color, #2481cc);
       background: color-mix(in srgb, var(--tg-theme-button-color, #2481cc) 12%, transparent);
     }
-
     .bring-btn.done {
-      background: color-mix(in srgb, #34c759 20%, transparent);
+      background: color-mix(in srgb, #34c759 18%, transparent);
       color: #34c759;
+    }
+
+    @keyframes bringPulse {
+      0%   { transform: scale(1);    background: color-mix(in srgb, var(--tg-theme-button-color, #2481cc) 12%, transparent); }
+      40%  { transform: scale(1.25); background: color-mix(in srgb, #34c759 45%, transparent); color: #34c759; }
+      100% { transform: scale(1);    background: color-mix(in srgb, var(--tg-theme-button-color, #2481cc) 12%, transparent); }
+    }
+
+    .bring-btn.pulse {
+      animation: bringPulse 0.55s ease-in-out 3;
     }
 
     .remove-btn {
@@ -123,7 +214,7 @@
     .qty-control {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
       flex-shrink: 0;
     }
 
@@ -132,49 +223,53 @@
       height: 32px;
       border-radius: 50%;
       font-size: 20px;
-      font-weight: 400;
+      font-weight: 300;
+      line-height: 1;
     }
 
     .minus-btn {
       background: color-mix(in srgb, #ff3b30 12%, transparent);
       color: #ff3b30;
     }
-
     .plus-btn {
       background: color-mix(in srgb, #34c759 12%, transparent);
       color: #34c759;
     }
+    .qty-btn.pressing {
+      filter: brightness(0.85);
+    }
 
     .qty-display {
-      min-width: 36px;
+      min-width: 38px;
       text-align: center;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--tg-theme-text-color, #000);
     }
 
+    /* ── Empty / Error ───────────────────────────────────────────────────────── */
+
     .empty-state {
       text-align: center;
-      padding: 60px 24px;
+      padding: 64px 24px;
       color: var(--tg-theme-hint-color, #888);
     }
-
     .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
     .empty-state p { font-size: 15px; }
-
-    .spinner {
-      text-align: center;
-      padding: 60px;
-      font-size: 28px;
-    }
   </style>
 </head>
 <body>
-  <header>
-    <span>🧊 Kühlschrank</span>
-    <button id="undo-btn" class="undo-btn" disabled title="Rückgängig">↩</button>
-  </header>
-  <div id="items-list"><div class="spinner">⏳</div></div>
+  <div class="sticky-top">
+    <header>
+      <span class="header-title">🧊 Kühlschrank</span>
+      <button id="undo-btn" class="undo-btn" disabled title="Rückgängig">↩</button>
+    </header>
+    <div id="search-wrap">
+      <input id="search" type="search" placeholder="🔍 Suchen…" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+  </div>
+
+  <div id="items-list"></div>
 
   <script>
     const tg = window.Telegram.WebApp;
@@ -184,59 +279,195 @@
     const initData = tg.initData || '';
     const headers = { 'Authorization': initData, 'Content-Type': 'application/json' };
 
-    async function loadItems() {
-      try {
-        const res = await fetch('/api/fridge', { headers });
-        const items = await res.json();
-        renderItems(items);
-      } catch {
-        document.getElementById('items-list').innerHTML =
-          '<div class="empty-state"><div class="icon">⚠️</div><p>Fehler beim Laden</p></div>';
-      }
+    // Items zeroed in this session – deleted on pagehide
+    const zeroedItems = new Set();
+    let allItems = [];
+
+    // ── EMOJI ─────────────────────────────────────────────────────────────────
+
+    function getEmoji(name) {
+      const n = name.toLowerCase();
+      if (/milch|milk/.test(n))                              return '🥛';
+      if (/käse|cheese/.test(n))                             return '🧀';
+      if (/butter/.test(n))                                  return '🧈';
+      if (/joghurt|yogurt/.test(n))                          return '🫙';
+      if (/sahne|creme fraiche|schmand|quark/.test(n))       return '🥛';
+      if (/\bei\b|eier/.test(n))                             return '🥚';
+      if (/salami|wurst|schinken|fleisch|hack|schnitzel|hähnchen|hühnchen/.test(n)) return '🥩';
+      if (/fisch|lachs|thunfisch|forelle|hering/.test(n))   return '🐟';
+      if (/shrimp|garnele/.test(n))                          return '🦐';
+      if (/karotte|möhre/.test(n))                           return '🥕';
+      if (/tomate/.test(n))                                  return '🍅';
+      if (/paprika/.test(n))                                 return '🫑';
+      if (/gurke/.test(n))                                   return '🥒';
+      if (/salat|rucola|spinat/.test(n))                     return '🥬';
+      if (/zwiebel/.test(n))                                 return '🧅';
+      if (/knoblauch/.test(n))                               return '🧄';
+      if (/brokkoli/.test(n))                                return '🥦';
+      if (/champignon|pilz/.test(n))                         return '🍄';
+      if (/apfel/.test(n))                                   return '🍎';
+      if (/banane/.test(n))                                  return '🍌';
+      if (/orange|mandarine/.test(n))                        return '🍊';
+      if (/zitrone/.test(n))                                 return '🍋';
+      if (/erdbeere/.test(n))                                return '🍓';
+      if (/traube/.test(n))                                  return '🍇';
+      if (/heidelbeere|blaubeere/.test(n))                   return '🫐';
+      if (/avocado/.test(n))                                 return '🥑';
+      if (/mais/.test(n))                                    return '🌽';
+      if (/kartoffel/.test(n))                               return '🥔';
+      if (/honig/.test(n))                                   return '🍯';
+      if (/marmelade|konfitüre/.test(n))                     return '🫙';
+      if (/mayo|mayonnaise/.test(n))                         return '🫙';
+      if (/senf/.test(n))                                    return '🫙';
+      if (/ketchup/.test(n))                                 return '🍅';
+      if (/saft|juice/.test(n))                              return '🧃';
+      if (/wasser/.test(n))                                  return '💧';
+      if (/bier/.test(n))                                    return '🍺';
+      if (/wein/.test(n))                                    return '🍷';
+      if (/brot|brötchen|toast/.test(n))                     return '🍞';
+      if (/öl|oil/.test(n))                                  return '🫒';
+      if (/schokolade|schoko/.test(n))                       return '🍫';
+      if (/\beis\b/.test(n))                                 return '🍦';
+      if (/pizza/.test(n))                                   return '🍕';
+      if (/nudel|pasta/.test(n))                             return '🍝';
+      if (/reis/.test(n))                                    return '🍚';
+      return '🛒';
+    }
+
+    // ── SKELETON ──────────────────────────────────────────────────────────────
+
+    function renderSkeleton() {
+      document.getElementById('items-list').innerHTML = Array(6).fill('').map(() => `
+        <div class="skeleton-item">
+          <div class="skel skel-emoji"></div>
+          <div class="skel skel-text"></div>
+          <div class="skel skel-btn"></div>
+          <div class="skel skel-btn"></div>
+        </div>`).join('');
+    }
+
+    // ── RENDER ────────────────────────────────────────────────────────────────
+
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     function renderItems(items) {
-      const container = document.getElementById('items-list');
-      if (!items.length) {
-        container.innerHTML =
-          '<div class="empty-state"><div class="icon">🫙</div><p>Kühlschrank ist leer</p></div>';
-        return;
-      }
-      container.innerHTML = items.map(item => {
-        const hasQty = item.quantity != null;
-        const unit = item.unit ?? '';
-        const controls = hasQty
-          ? `<div class="qty-control">
-               <button class="btn qty-btn minus-btn" title="Weniger">−</button>
-               <span class="qty-display">${item.quantity}${unit ? '&nbsp;' + escHtml(unit) : ''}</span>
-               <button class="btn qty-btn plus-btn" title="Mehr">+</button>
-             </div>`
-          : `<button class="btn remove-btn" title="Verbraucht">✓</button>`;
-        return `
-          <div class="item" data-name="${escHtml(item.name)}" data-quantity="${hasQty ? item.quantity : ''}" data-unit="${escHtml(unit)}">
-            <div class="item-info">
-              <div class="item-name">${escHtml(item.name)}</div>
-            </div>
-            <button class="btn bring-btn" title="Zu Bring! hinzufügen">🛒</button>
-            ${controls}
-          </div>`;
-      }).join('');
+      allItems = items;
+      applyFilter(document.getElementById('search').value);
     }
 
-    function escHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    function applyFilter(query = '') {
+      const q = query.toLowerCase().trim();
+      const filtered = q ? allItems.filter(i => i.name.toLowerCase().includes(q)) : allItems;
+      const container = document.getElementById('items-list');
+
+      if (!filtered.length) {
+        container.innerHTML = q
+          ? '<div class="empty-state"><div class="icon">🔍</div><p>Nichts gefunden</p></div>'
+          : '<div class="empty-state"><div class="icon">🫙</div><p>Kühlschrank ist leer</p></div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const hasQty  = item.quantity != null;
+        const unit    = item.unit ?? '';
+        const zeroed  = zeroedItems.has(item.name);
+        const dispQty = zeroed ? 0 : item.quantity;
+        const emoji   = getEmoji(item.name);
+
+        const controls = hasQty
+          ? `<div class="qty-control">
+               <button class="btn qty-btn minus-btn" data-action="minus">−</button>
+               <span class="qty-display">${dispQty}${unit ? '&nbsp;' + escHtml(unit) : ''}</span>
+               <button class="btn qty-btn plus-btn" data-action="plus">+</button>
+             </div>`
+          : `<button class="btn remove-btn" data-action="remove">✓</button>`;
+
+        return `
+          <div class="item-wrap">
+            <div class="swipe-bg">🗑️</div>
+            <div class="item${zeroed ? ' zeroed' : ''}"
+                 data-name="${escHtml(item.name)}"
+                 data-quantity="${hasQty ? dispQty : ''}"
+                 data-unit="${escHtml(unit)}">
+              <span class="item-emoji">${emoji}</span>
+              <div class="item-info">
+                <div class="item-name">${escHtml(item.name)}</div>
+              </div>
+              <button class="btn bring-btn${zeroed ? ' pulse' : ''}" data-action="bring">🛒</button>
+              ${controls}
+            </div>
+          </div>`;
+      }).join('');
+
+      document.querySelectorAll('.item-wrap').forEach(attachSwipe);
     }
+
+    // ── SWIPE TO DELETE ───────────────────────────────────────────────────────
+
+    function attachSwipe(wrap) {
+      const item = wrap.querySelector('.item');
+      if (!item) return;
+
+      let startX = 0, startY = 0, dx = 0, active = false;
+      const THRESHOLD = 72;
+
+      item.addEventListener('touchstart', e => {
+        if (e.target.closest('.btn')) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dx = 0; active = false;
+      }, { passive: true });
+
+      item.addEventListener('touchmove', e => {
+        if (!startX) return;
+        const moveX = e.touches[0].clientX - startX;
+        const moveY = e.touches[0].clientY - startY;
+
+        if (!active) {
+          if (Math.abs(moveX) < 4 && Math.abs(moveY) < 4) return;
+          if (Math.abs(moveY) > Math.abs(moveX)) { startX = 0; return; }
+          active = true;
+        }
+
+        dx = Math.min(0, moveX);
+        item.classList.add('swiping');
+        item.style.transform = `translateX(${dx}px)`;
+        e.preventDefault();
+      }, { passive: false });
+
+      item.addEventListener('touchend', () => {
+        if (!active) return;
+        startX = 0; active = false;
+        item.classList.remove('swiping');
+
+        if (dx < -THRESHOLD) {
+          deleteItem(item.dataset.name, item, wrap);
+        } else {
+          item.style.transition = 'transform 0.22s ease';
+          item.style.transform = '';
+          setTimeout(() => item.style.transition = '', 220);
+        }
+        dx = 0;
+      }, { passive: true });
+    }
+
+    // ── ACTIONS ───────────────────────────────────────────────────────────────
 
     function enableUndo() {
       document.getElementById('undo-btn').disabled = false;
     }
 
-    async function undo() {
+    async function handleUndo() {
       const btn = document.getElementById('undo-btn');
       btn.disabled = true;
       const res = await fetch('/api/fridge/undo', { method: 'POST', headers });
       const { success, items } = await res.json();
       if (success) {
+        zeroedItems.clear();
         renderItems(items);
         tg.HapticFeedback?.notificationOccurred('success');
       } else {
@@ -244,39 +475,76 @@
       }
     }
 
-    async function removeItem(name, el) {
-      el.classList.add('removing');
+    async function deleteItem(name, itemEl, wrap) {
+      const target = wrap ?? itemEl.closest('.item-wrap');
+      itemEl.classList.add('removing');
       await fetch(`/api/fridge/${encodeURIComponent(name)}`, { method: 'DELETE', headers });
       setTimeout(() => {
-        el.remove();
-        if (!document.querySelector('.item')) renderItems([]);
-      }, 200);
+        target?.remove();
+        allItems = allItems.filter(i => i.name !== name);
+        zeroedItems.delete(name);
+        if (!document.querySelector('.item')) applyFilter('');
+      }, 220);
       tg.HapticFeedback?.notificationOccurred('success');
       enableUndo();
     }
 
-    async function adjustQty(name, itemEl, delta) {
-      const rawQty = itemEl.dataset.quantity;
-      const qty = rawQty !== '' ? parseFloat(rawQty) : null;
+    function zeroItem(name, itemEl) {
+      zeroedItems.add(name);
+      itemEl.classList.add('zeroed');
+      itemEl.dataset.quantity = '0';
+      const display = itemEl.querySelector('.qty-display');
       const unit = itemEl.dataset.unit;
-      const newQty = qty !== null ? parseFloat((qty + delta).toFixed(3)) : (delta > 0 ? delta : 0);
+      if (display) display.textContent = `0${unit ? ' ' + unit : ''}`;
+
+      const bring = itemEl.querySelector('.bring-btn');
+      if (bring) {
+        bring.classList.remove('pulse');
+        void bring.offsetWidth;
+        bring.classList.add('pulse');
+      }
+      tg.HapticFeedback?.notificationOccurred('warning');
+    }
+
+    function unzeroItem(name, itemEl) {
+      zeroedItems.delete(name);
+      itemEl.classList.remove('zeroed');
+    }
+
+    async function adjustQty(name, itemEl, delta) {
+      const rawQty  = itemEl.dataset.quantity;
+      const qty     = rawQty !== '' ? parseFloat(rawQty) : null;
+      const unit    = itemEl.dataset.unit;
+      const zeroed  = zeroedItems.has(name);
+
+      if (zeroed) {
+        if (delta < 0) return; // already at 0
+        // Un-zero: backend still holds previous qty (we never called PATCH for zeroing)
+        unzeroItem(name, itemEl);
+        itemEl.dataset.quantity = '1';
+        const display = itemEl.querySelector('.qty-display');
+        if (display) display.textContent = `1${unit ? ' ' + unit : ''}`;
+        tg.HapticFeedback?.notificationOccurred('success');
+        return;
+      }
+
+      const newQty = qty !== null
+        ? parseFloat((qty + delta).toFixed(3))
+        : (delta > 0 ? 1 : 0);
 
       if (newQty <= 0) {
-        itemEl.classList.add('removing');
-        setTimeout(() => {
-          itemEl.remove();
-          if (!document.querySelector('.item')) renderItems([]);
-        }, 200);
-        tg.HapticFeedback?.notificationOccurred('success');
-        fetch(`/api/fridge/${encodeURIComponent(name)}`, {
-          method: 'PATCH', headers, body: JSON.stringify({ delta }),
-        });
+        zeroItem(name, itemEl);
+        // Don't call PATCH – item stays in backend until pagehide
         return;
       }
 
       itemEl.dataset.quantity = newQty;
       const display = itemEl.querySelector('.qty-display');
-      if (display) display.textContent = `${newQty}${unit ? ' ' + unit : ''}`;
+      if (display) display.textContent = `${newQty}${unit ? ' ' + unit : ''}`;
+
+      const item = allItems.find(i => i.name === name);
+      if (item) item.quantity = newQty;
+
       tg.HapticFeedback?.notificationOccurred('success');
       enableUndo();
       fetch(`/api/fridge/${encodeURIComponent(name)}`, {
@@ -288,9 +556,9 @@
       btn.disabled = true;
       try {
         await fetch('/api/fridge/bring', {
-          method: 'POST', headers,
-          body: JSON.stringify({ name }),
+          method: 'POST', headers, body: JSON.stringify({ name }),
         });
+        btn.classList.remove('pulse');
         btn.classList.add('done');
         btn.textContent = '✓';
         tg.HapticFeedback?.notificationOccurred('success');
@@ -300,17 +568,79 @@
       }
     }
 
+    // ── QTY AUTO-REPEAT ───────────────────────────────────────────────────────
+
+    let repeatTimer = null, repeatInterval = null;
+
+    function startRepeat(fn) {
+      fn();
+      repeatTimer = setTimeout(() => { repeatInterval = setInterval(fn, 140); }, 500);
+    }
+
+    function stopRepeat() {
+      clearTimeout(repeatTimer);
+      clearInterval(repeatInterval);
+      repeatTimer = repeatInterval = null;
+    }
+
+    // ── EVENT LISTENERS ───────────────────────────────────────────────────────
+
     document.getElementById('items-list').addEventListener('click', e => {
-      const itemEl = e.target.closest('.item');
-      if (!itemEl) return;
-      const name = itemEl.dataset.name;
-      if (e.target.closest('.remove-btn')) removeItem(name, itemEl);
+      const item = e.target.closest('.item');
+      if (!item) return;
+      const name = item.dataset.name;
+      if (e.target.closest('.remove-btn')) deleteItem(name, item);
       else if (e.target.closest('.bring-btn')) addToBring(name, e.target.closest('.bring-btn'));
-      else if (e.target.closest('.minus-btn')) adjustQty(name, itemEl, -1);
-      else if (e.target.closest('.plus-btn')) adjustQty(name, itemEl, 1);
     });
 
-    document.getElementById('undo-btn').addEventListener('click', undo);
+    document.getElementById('items-list').addEventListener('pointerdown', e => {
+      const btn = e.target.closest('.qty-btn');
+      if (!btn) return;
+      const item = btn.closest('.item');
+      if (!item) return;
+      const name  = item.dataset.name;
+      const delta = btn.classList.contains('minus-btn') ? -1 : 1;
+
+      btn.classList.add('pressing');
+      btn.setPointerCapture(e.pointerId);
+
+      startRepeat(() => adjustQty(name, item, delta));
+
+      const stop = () => { stopRepeat(); btn.classList.remove('pressing'); };
+      btn.addEventListener('pointerup',     stop, { once: true });
+      btn.addEventListener('pointercancel', stop, { once: true });
+    });
+
+    document.getElementById('search').addEventListener('input', e => {
+      applyFilter(e.target.value);
+    });
+
+    document.getElementById('undo-btn').addEventListener('click', handleUndo);
+
+    // Batch-delete zeroed items when app closes
+    window.addEventListener('pagehide', () => {
+      if (!zeroedItems.size) return;
+      fetch('/api/fridge/delete-batch', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ names: [...zeroedItems] }),
+        keepalive: true,
+      }).catch(() => {});
+    });
+
+    // ── INIT ──────────────────────────────────────────────────────────────────
+
+    async function loadItems() {
+      renderSkeleton();
+      try {
+        const res   = await fetch('/api/fridge', { headers });
+        const items = await res.json();
+        renderItems(items);
+      } catch {
+        document.getElementById('items-list').innerHTML =
+          '<div class="empty-state"><div class="icon">⚠️</div><p>Fehler beim Laden</p></div>';
+      }
+    }
 
     loadItems();
   </script>
