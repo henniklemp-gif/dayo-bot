@@ -25,7 +25,7 @@ const KEYBOARD = {
     keyboard: [
       ['📅 Heute', '📆 Woche'],
       ['🏋️ Training', '🍽️ Kochen'],
-      [WEBAPP_URL ? { text: '🧊 Kühlschrank', web_app: { url: WEBAPP_URL } } : '🧊 Kühlschrank'],
+      ['🧊 Kühlschrank'],
     ],
     resize_keyboard: true,
     persistent: true,
@@ -227,16 +227,16 @@ const KEYBOARD_SHORTCUTS = {
     bot.sendMessage(chatId, `${workout.icon} *Heutiges Training*${dayInfo}\n\n*${workout.type}*\n_${workout.desc}_`, { parse_mode: 'Markdown' });
   },
   'Kochen':       async (chatId) => handleCookingSuggestion(chatId),
-  'Kühlschrank':  (chatId) => {
+  'Kühlschrank':  async (chatId) => {
     if (WEBAPP_URL) {
-      bot.sendMessage(chatId, '🧊 Kühlschrank öffnen:', {
+      await bot.sendMessage(chatId, '🧊 Kühlschrank öffnen:', {
         reply_markup: { inline_keyboard: [[{ text: '🧊 Kühlschrank öffnen', web_app: { url: WEBAPP_URL } }]] }
       });
       return;
     }
     const items = getFridgeContents();
-    if (!items.length) { bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙'); return; }
-    bot.sendMessage(chatId, `🧊 *Dein Kühlschrank:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`, { parse_mode: 'Markdown' });
+    if (!items.length) { await bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙'); return; }
+    await bot.sendMessage(chatId, `🧊 *Dein Kühlschrank:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`, { parse_mode: 'Markdown' });
   },
 };
 
