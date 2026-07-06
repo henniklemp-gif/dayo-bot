@@ -167,7 +167,9 @@ bot.on('document', async (msg) => {
   try {
     const fileUrl = await bot.getFileLink(doc.file_id);
     const res     = await fetch(fileUrl);
+    if (!res.ok) throw new Error(`Download fehlgeschlagen: HTTP ${res.status}`);
     const buffer  = Buffer.from(await res.arrayBuffer());
+    console.log(`[PDF] Datei geladen: ${buffer.length} Bytes, MIME: ${doc.mime_type}`);
     const items   = await analyzeReceipt(buffer, doc.mime_type);
     addItems(items);
     bot.editMessageText(
@@ -176,7 +178,14 @@ bot.on('document', async (msg) => {
         : 'Hmm, keine Lebensmittel gefunden. 🤔 Vielleicht mal als Foto probieren?',
       { chat_id: chatId, message_id: status.message_id, parse_mode: 'Markdown' }
     );
-  } catch (e) { err(chatId, e); }
+  } catch (e) {
+    console.error('[PDF] Fehler:', e);
+    const errorMsg = e?.status ? `API-Fehler ${e.status}: ${e?.error?.error?.message ?? e.message}` : e.message;
+    bot.editMessageText(
+      `❌ Fehler beim Scannen:\n\`${errorMsg}\``,
+      { chat_id: chatId, message_id: status.message_id, parse_mode: 'Markdown' }
+    );
+  }
 });
 
 // ── SPRACHNACHRICHTEN ─────────────────────────────────────────────────────────
