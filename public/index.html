@@ -256,6 +256,141 @@
     }
     .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
     .empty-state p { font-size: 15px; }
+
+    /* ── FAB ─────────────────────────────────────────────────────────────────── */
+
+    #fab {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: none;
+      background: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #fff);
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--tg-theme-button-color, #2481cc) 45%, transparent);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.18s, box-shadow 0.18s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #fab:active { transform: scale(0.91); }
+    #fab.open   { transform: rotate(45deg); }
+
+    /* ── Bottom Sheet ────────────────────────────────────────────────────────── */
+
+    #sheet-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 40;
+    }
+    #sheet-overlay.visible { display: block; }
+
+    #sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--tg-theme-bg-color, #fff);
+      border-radius: 20px 20px 0 0;
+      padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
+      z-index: 41;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    #sheet.open { transform: translateY(0); }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--tg-theme-hint-color, #ccc);
+      margin: 10px auto 18px;
+    }
+
+    .sheet-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .sheet-field {
+      margin-bottom: 12px;
+    }
+
+    .sheet-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tg-theme-hint-color, #888);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .sheet-field input {
+      width: 100%;
+      padding: 11px 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+      color: var(--tg-theme-text-color, #000);
+      font-size: 16px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .qty-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .unit-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: none;
+      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+      color: var(--tg-theme-text-color, #000);
+      font-size: 13px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .chip.active {
+      background: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #fff);
+    }
+
+    #add-btn {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      background: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #fff);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s;
+    }
+    #add-btn:disabled { opacity: 0.45; }
+    #add-btn:not(:disabled):active { opacity: 0.8; }
   </style>
 </head>
 <body>
@@ -270,6 +405,41 @@
   </div>
 
   <div id="items-list"></div>
+
+  <button id="fab" title="Hinzufügen">+</button>
+
+  <div id="sheet-overlay"></div>
+  <div id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Artikel hinzufügen</div>
+
+    <div class="sheet-field">
+      <label>Name</label>
+      <input id="inp-name" type="text" placeholder="z.B. Original Stracke Salami" autocomplete="off">
+    </div>
+
+    <div class="qty-row">
+      <div class="sheet-field">
+        <label>Menge (optional)</label>
+        <input id="inp-qty" type="number" placeholder="z.B. 3" min="0" step="any">
+      </div>
+      <div class="sheet-field">
+        <label>Einheit</label>
+        <input id="inp-unit" type="text" placeholder="Stk, g, ml …" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="unit-chips">
+      <button class="chip" data-unit="Stk">Stk</button>
+      <button class="chip" data-unit="g">g</button>
+      <button class="chip" data-unit="kg">kg</button>
+      <button class="chip" data-unit="ml">ml</button>
+      <button class="chip" data-unit="l">l</button>
+      <button class="chip" data-unit="Pkg">Pkg</button>
+    </div>
+
+    <button id="add-btn" disabled>Hinzufügen</button>
+  </div>
 
   <script>
     const tg = window.Telegram.WebApp;
@@ -643,6 +813,90 @@
     }
 
     loadItems();
+
+    // ── BOTTOM SHEET ──────────────────────────────────────────────────────────
+
+    const fab      = document.getElementById('fab');
+    const sheet    = document.getElementById('sheet');
+    const overlay  = document.getElementById('sheet-overlay');
+    const inpName  = document.getElementById('inp-name');
+    const inpQty   = document.getElementById('inp-qty');
+    const inpUnit  = document.getElementById('inp-unit');
+    const addBtn   = document.getElementById('add-btn');
+
+    function openSheet() {
+      overlay.classList.add('visible');
+      sheet.classList.add('open');
+      fab.classList.add('open');
+      setTimeout(() => inpName.focus(), 320);
+    }
+
+    function closeSheet() {
+      sheet.classList.remove('open');
+      overlay.classList.remove('visible');
+      fab.classList.remove('open');
+      inpName.value = '';
+      inpQty.value  = '';
+      inpUnit.value = '';
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      addBtn.disabled = true;
+    }
+
+    fab.addEventListener('click', () => {
+      sheet.classList.contains('open') ? closeSheet() : openSheet();
+    });
+    overlay.addEventListener('click', closeSheet);
+
+    inpName.addEventListener('input', () => {
+      addBtn.disabled = !inpName.value.trim();
+    });
+
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        if (inpUnit.value === chip.dataset.unit) {
+          inpUnit.value = '';
+        } else {
+          chip.classList.add('active');
+          inpUnit.value = chip.dataset.unit;
+        }
+      });
+    });
+
+    inpUnit.addEventListener('input', () => {
+      document.querySelectorAll('.chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.unit === inpUnit.value);
+      });
+    });
+
+    addBtn.addEventListener('click', async () => {
+      const name = inpName.value.trim();
+      if (!name) return;
+      const qty  = inpQty.value !== '' ? parseFloat(inpQty.value) : null;
+      const unit = inpUnit.value.trim() || null;
+
+      addBtn.disabled = true;
+      try {
+        const res   = await fetch('/api/fridge/add', {
+          method: 'POST', headers,
+          body: JSON.stringify({ name, quantity: qty, unit }),
+        });
+        const { items } = await res.json();
+        renderItems(items);
+        tg.HapticFeedback?.notificationOccurred('success');
+        closeSheet();
+      } catch {
+        addBtn.disabled = false;
+        tg.HapticFeedback?.notificationOccurred('error');
+      }
+    });
+
+    // Swipe sheet down to close
+    let sheetStartY = 0;
+    sheet.addEventListener('touchstart', e => { sheetStartY = e.touches[0].clientY; }, { passive: true });
+    sheet.addEventListener('touchend', e => {
+      if (e.changedTouches[0].clientY - sheetStartY > 60) closeSheet();
+    }, { passive: true });
   </script>
 </body>
 </html>

@@ -2,7 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { getFridgeContents, removeItem, removeItems, adjustItem, undoLastChange } from './fridge.js';
+import { getFridgeContents, addItems, removeItem, removeItems, adjustItem, undoLastChange } from './fridge.js';
 import { addToBring } from './bring.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -61,6 +61,13 @@ app.patch('/api/fridge/:name', authMiddleware, (req, res) => {
 app.post('/api/fridge/undo', authMiddleware, (req, res) => {
   const success = undoLastChange();
   res.json({ success, items: getFridgeContents() });
+});
+
+app.post('/api/fridge/add', authMiddleware, (req, res) => {
+  const { name, quantity, unit } = req.body ?? {};
+  if (!name?.trim()) return res.status(400).json({ error: 'name required' });
+  addItems([{ name: name.trim(), quantity: quantity ?? null, unit: unit?.trim() || null }]);
+  res.json({ success: true, items: getFridgeContents() });
 });
 
 app.post('/api/fridge/delete-batch', authMiddleware, (req, res) => {
