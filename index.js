@@ -58,7 +58,7 @@ function err(chatId, error) {
 // ── COMMANDS ──────────────────────────────────────────────────────────────────
 
 bot.onText(/\/start/, (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   bot.sendMessage(msg.chat.id, [
     'Hey Henrik! 👋 Ich bin Dayo, dein persönlicher Alltagsbegleiter.',
     '',
@@ -82,7 +82,7 @@ bot.onText(/\/start/, (msg) => {
 });
 
 bot.onText(/\/heute/, async (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   try {
     const [events, workout] = await Promise.all([getTodayEvents(), getTodayWorkout()]);
     bot.sendMessage(msg.chat.id, formatDailyOverview(events, workout), { parse_mode: 'Markdown' });
@@ -90,7 +90,7 @@ bot.onText(/\/heute/, async (msg) => {
 });
 
 bot.onText(/\/woche/, async (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   try {
     const events = await getWeekEvents();
     bot.sendMessage(msg.chat.id, formatWeekOverview(events), { parse_mode: 'Markdown' });
@@ -98,7 +98,7 @@ bot.onText(/\/woche/, async (msg) => {
 });
 
 bot.onText(/\/training/, async (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   try {
     const workout = getTodayWorkout();
     const status  = getPlanStatus();
@@ -116,7 +116,7 @@ bot.onText(/\/training/, async (msg) => {
 });
 
 bot.onText(/\/kuehlschrank/, (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   if (WEBAPP_URL) {
     bot.sendMessage(msg.chat.id, '🧊 Kühlschrank öffnen:', {
       reply_markup: { inline_keyboard: [[{ text: '🧊 Kühlschrank öffnen', web_app: { url: WEBAPP_URL } }]] }
@@ -133,14 +133,14 @@ bot.onText(/\/kuehlschrank/, (msg) => {
 });
 
 bot.onText(/\/kochen/, async (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   await handleCookingSuggestion(msg.chat.id);
 });
 
 // ── FOTOS & DOKUMENTE (Kassenbon) ─────────────────────────────────────────────
 
 bot.on('photo', async (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   const chatId = msg.chat.id;
   const status = await bot.sendMessage(chatId, '📸 Kassenbon erkannt! Analysiere gerade...');
   try {
@@ -160,7 +160,7 @@ bot.on('photo', async (msg) => {
 });
 
 bot.on('document', async (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   const chatId = msg.chat.id;
   const doc = msg.document;
   if (!doc.mime_type?.includes('pdf') && !doc.mime_type?.includes('image')) return;
@@ -192,7 +192,7 @@ bot.on('document', async (msg) => {
 // ── SPRACHNACHRICHTEN ─────────────────────────────────────────────────────────
 
 bot.on('voice', async (msg) => {
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   msg.handled = true;
   const chatId = msg.chat.id;
   try {
@@ -257,7 +257,7 @@ bot.on('message', async (msg) => {
   if (msg.handled) return;
   if (msg.voice) return;
   if (!msg.text || msg.text.startsWith('/')) return;
-  if (!allowed(msg.from.id)) return;
+  if (!msg.from || !allowed(msg.from.id)) return;
   await handleTextMessage(msg);
 });
 
