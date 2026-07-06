@@ -8,14 +8,15 @@ import { initScheduler } from './scheduler.js';
 import { analyzeReceipt } from './vision.js';
 import { transcribeVoice } from './voice.js';
 import { formatDailyOverview, formatWeekOverview } from './format.js';
-import { startServer } from './server.js';
+import { startServer, registerBotWebhook } from './server.js';
 
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+const WEBAPP_URL = process.env.WEBAPP_URL;
+const useWebhook = !!WEBAPP_URL;
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: !useWebhook });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const ALLOWED_USERS = process.env.ALLOWED_USERS.split(',').map(id => parseInt(id.trim(), 10));
 const MY_ID = parseInt(process.env.MY_TELEGRAM_ID, 10);
-const WEBAPP_URL = process.env.WEBAPP_URL;
 
 const conversationHistory = {};
 
@@ -438,5 +439,12 @@ Fitness-Kontext: ${trainingCtx} Kalorienziel: 2.200–2.400 kcal/Tag, 150–170 
 // ── START ─────────────────────────────────────────────────────────────────────
 
 initScheduler(bot, MY_ID);
+registerBotWebhook(bot);
 startServer();
+
+if (useWebhook) {
+  bot.setWebHook(`${WEBAPP_URL}/webhook`)
+    .then(() => console.log(`🔗 Webhook gesetzt: ${WEBAPP_URL}/webhook`))
+    .catch(e => console.error('❌ Webhook-Fehler:', e));
+}
 console.log('🤖 Dayo läuft!');

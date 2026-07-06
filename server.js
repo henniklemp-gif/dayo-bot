@@ -87,6 +87,13 @@ app.post('/api/fridge/bring', authMiddleware, async (req, res) => {
   }
 });
 
+export function registerBotWebhook(bot) {
+  app.post('/webhook', (req, res) => {
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
+  });
+}
+
 export function startServer() {
   const port = process.env.PORT || 3000;
   app.listen(port, () => console.log(`🌐 Mini App läuft auf Port ${port}`));
