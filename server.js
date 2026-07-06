@@ -87,14 +87,27 @@ app.post('/api/fridge/bring', authMiddleware, async (req, res) => {
   }
 });
 
+const seenUpdates = new Set();
+
 export function registerBotWebhook(bot) {
   app.post('/webhook', (req, res) => {
     const body = req.body;
+    const updateId = body?.update_id;
+
+    if (updateId && seenUpdates.has(updateId)) {
+      console.log(`[webhook] Duplikat ignoriert: update_id=${updateId}`);
+      return res.sendStatus(200);
+    }
+    if (updateId) {
+      seenUpdates.add(updateId);
+      setTimeout(() => seenUpdates.delete(updateId), 5 * 60 * 1000);
+    }
+
     const type = body?.message?.document ? 'document' :
                  body?.message?.photo    ? 'photo' :
                  body?.message?.text     ? 'text' :
                  body?.message?.voice    ? 'voice' : 'other';
-    console.log(`[webhook] Update: ${type} (update_id=${body?.update_id})`);
+    console.log(`[webhook] Update: ${type} (update_id=${updateId})`);
     bot.processUpdate(body);
     res.sendStatus(200);
   });
