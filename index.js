@@ -443,8 +443,16 @@ registerBotWebhook(bot);
 startServer();
 
 if (useWebhook) {
-  bot.setWebHook(`${WEBAPP_URL}/webhook`)
-    .then(() => console.log(`🔗 Webhook gesetzt: ${WEBAPP_URL}/webhook`))
-    .catch(e => console.error('❌ Webhook-Fehler:', e));
+  const webhookUrl = `${WEBAPP_URL}/webhook`;
+  bot.getWebHookInfo()
+    .then(info => {
+      if (info.url === webhookUrl) {
+        console.log(`🔗 Webhook bereits aktiv: ${webhookUrl}`);
+        return;
+      }
+      return bot.setWebHook(webhookUrl)
+        .then(() => console.log(`🔗 Webhook gesetzt: ${webhookUrl}`));
+    })
+    .catch(e => console.error('❌ Webhook-Fehler:', e?.message ?? String(e)));
 }
 console.log('🤖 Dayo läuft!');
