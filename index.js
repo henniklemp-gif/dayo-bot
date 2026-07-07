@@ -8,11 +8,10 @@ import { initScheduler } from './scheduler.js';
 import { analyzeReceipt } from './vision.js';
 import { transcribeVoice } from './voice.js';
 import { formatDailyOverview, formatWeekOverview } from './format.js';
-import { startServer, registerBotWebhook } from './server.js';
+import { startServer } from './server.js';
 
 const WEBAPP_URL = process.env.WEBAPP_URL;
-const useWebhook = !!WEBAPP_URL;
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: !useWebhook });
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const ALLOWED_USERS = process.env.ALLOWED_USERS.split(',').map(id => parseInt(id.trim(), 10));
@@ -439,20 +438,5 @@ Fitness-Kontext: ${trainingCtx} Kalorienziel: 2.200–2.400 kcal/Tag, 150–170 
 // ── START ─────────────────────────────────────────────────────────────────────
 
 initScheduler(bot, MY_ID);
-registerBotWebhook(bot);
 startServer();
-
-if (useWebhook) {
-  const webhookUrl = `${WEBAPP_URL}/webhook`;
-  bot.getWebHookInfo()
-    .then(info => {
-      if (info.url === webhookUrl) {
-        console.log(`🔗 Webhook bereits aktiv: ${webhookUrl}`);
-        return;
-      }
-      return bot.setWebHook(webhookUrl)
-        .then(() => console.log(`🔗 Webhook gesetzt: ${webhookUrl}`));
-    })
-    .catch(e => console.error('❌ Webhook-Fehler:', e?.message ?? String(e)));
-}
 console.log('🤖 Dayo läuft!');
