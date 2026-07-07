@@ -195,23 +195,20 @@ bot.on('voice', async (msg) => {
   msg.handled = true;
   const chatId = msg.chat.id;
   try {
+    console.log('[voice] Lade Sprachdatei...');
     const fileInfo = await bot.getFile(msg.voice.file_id);
     const fileUrl  = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileInfo.file_path}`;
     const text     = await transcribeVoice(fileUrl);
+    console.log('[voice] Transkription:', text);
     await handleTextIntent(chatId, text);
   } catch (e) {
+    console.error('[voice] Fehler:', e?.message ?? String(e));
     bot.sendMessage(chatId, 'Hm, die Sprachnachricht hab ich nicht verstanden 🙈');
   }
 });
 
 // ── TEXTNACHRICHTEN → Intent-Erkennung + Claude-Chat ─────────────────────────
 
-// Emojis und Variation Selectors entfernen für robusten Key-Vergleich
-function stripEmojis(text) {
-  return text.replace(/[\p{Emoji}️‍]/gu, '').trim();
-}
-
-// Keys OHNE Emojis – müssen mit stripEmojis(buttonText) übereinstimmen
 const KEYBOARD_SHORTCUTS = {
   'Heute':        async (chatId) => { const [e, w] = await Promise.all([getTodayEvents(), getTodayWorkout()]); bot.sendMessage(chatId, formatDailyOverview(e, w), { parse_mode: 'Markdown' }); },
   'Woche':        async (chatId) => { bot.sendMessage(chatId, formatWeekOverview(await getWeekEvents()), { parse_mode: 'Markdown' }); },
@@ -243,20 +240,33 @@ async function handleTextMessage(msg) {
   const chatId = msg.chat.id;
   const text   = msg.text;
   try {
-    const key = stripEmojis(text.trim());
-    const shortcut = KEYBOARD_SHORTCUTS[key];
-    if (shortcut) { await shortcut(chatId); return; }
+    const trimmed = text.trim();
+    // Button-Labels enden immer mit dem Key (z.B. "📅 Heute" → "Heute")
+    const buttonKey = Object.keys(KEYBOARD_SHORTCUTS).find(k => trimmed === k || trimmed.endsWith(' ' + k));
+    if (buttonKey) {
+      console.log(`[button] ${buttonKey}`);
+      await KEYBOARD_SHORTCUTS[buttonKey](chatId);
+      return;
+    }
     await handleTextIntent(chatId, text);
   } catch (e) {
     err(chatId, e);
   }
 }
 
+const seenMsgIds = new Set();
+
 bot.on('message', async (msg) => {
+  const key = `${msg.chat.id}:${msg.message_id}`;
+  if (seenMsgIds.has(key)) { console.log(`[dedup] Duplikat ignoriert: ${key}`); return; }
+  seenMsgIds.add(key);
+  setTimeout(() => seenMsgIds.delete(key), 5 * 60 * 1000);
+
   if (msg.handled) return;
   if (msg.voice) return;
   if (!msg.text || msg.text.startsWith('/')) return;
   if (!msg.from || !allowed(msg.from.id)) return;
+  console.log(`[msg] "${msg.text.substring(0, 60)}"`);
   await handleTextMessage(msg);
 });
 
@@ -294,7 +304,9 @@ JSON-Format: {"intent": "...", "data": {...}}`,
     const raw   = response.content[0].text.trim();
     const match = raw.match(/\{[\s\S]*\}/);
     parsed = JSON.parse(match ? match[0] : raw);
-  } catch {
+    console.log(`[intent] ${parsed.intent}`, JSON.stringify(parsed.data));
+  } catch (e) {
+    console.error('[intent] Parse-Fehler:', e?.message ?? String(e));
     bot.sendMessage(chatId, 'Das hab ich leider nicht ganz verstanden – kannst du das nochmal anders sagen? 😅');
     return;
   }
@@ -398,6 +410,7 @@ JSON-Format: {"intent": "...", "data": {...}}`,
         bot.sendMessage(chatId, 'Hmm, das hab ich nicht ganz einordnen können. Was kann ich für dich tun? 😊');
     }
   } catch (e) {
+    console.error('[intent] Aktionsfehler:', e?.message ?? String(e));
     err(chatId, e);
   }
 }
