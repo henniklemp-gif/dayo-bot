@@ -4,6 +4,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { getFridgeContents, addItems, removeItem, removeItems, adjustItem, undoLastChange } from './fridge.js';
 import { addToBring } from './bring.js';
+import { lookupProduct } from './barcode.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -75,6 +76,18 @@ app.post('/api/fridge/delete-batch', authMiddleware, (req, res) => {
   if (!Array.isArray(names)) return res.status(400).json({ error: 'names required' });
   removeItems(names);
   res.json({ success: true });
+});
+
+app.post('/api/fridge/barcode', authMiddleware, async (req, res) => {
+  const code = req.body?.code;
+  if (!code) return res.status(400).json({ error: 'code required' });
+  try {
+    const product = await lookupProduct(code);
+    res.json({ found: !!product, product });
+  } catch (err) {
+    console.error('Barcode-Lookup Fehler:', err.message);
+    res.status(500).json({ error: 'Lookup fehlgeschlagen' });
+  }
 });
 
 app.post('/api/fridge/bring', authMiddleware, async (req, res) => {
