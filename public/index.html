@@ -114,9 +114,34 @@
       100% { background-position: -200% 0; }
     }
 
-    .skel-emoji { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
     .skel-text  { height: 16px; flex: 1; }
     .skel-btn   { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; }
+
+    /* ── Kategorie-Gruppen ───────────────────────────────────────────────────── */
+
+    .category-header {
+      position: sticky;
+      top: var(--sticky-offset, 76px);
+      z-index: 10;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--tg-theme-hint-color, #666);
+      background: var(--tg-theme-bg-color, #fff);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #ccc) 15%, transparent);
+    }
+
+    .category-count { font-weight: 400; opacity: 0.7; }
+
+    .group-empty {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-style: italic;
+      color: var(--tg-theme-hint-color, #999);
+    }
 
     /* ── Items ───────────────────────────────────────────────────────────────── */
 
@@ -140,13 +165,14 @@
     .item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 11px 12px;
+      gap: 8px;
+      padding: 12px;
       border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #ccc) 18%, transparent);
       background: var(--tg-theme-bg-color, #fff);
       will-change: transform;
       touch-action: pan-y;
       transition: opacity 0.2s;
+      cursor: pointer;
     }
 
     .item.swiping { transition: none; }
@@ -160,15 +186,6 @@
     .item.zeroed { opacity: 0.55; }
     .item.zeroed .item-name { text-decoration: line-through; }
 
-    .item-emoji {
-      font-size: 26px;
-      width: 36px;
-      text-align: center;
-      line-height: 1;
-      flex-shrink: 0;
-      user-select: none;
-    }
-
     .item-info {
       flex: 1;
       min-width: 0;
@@ -181,6 +198,30 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
+    /* ── Pills & Badges ──────────────────────────────────────────────────────── */
+
+    .info-pill {
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+      color: var(--tg-theme-text-color, #000);
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .expiry-badge {
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .expiry-badge.soon    { background: color-mix(in srgb, #ff9500 15%, transparent); color: #ff9500; }
+    .expiry-badge.expired { background: color-mix(in srgb, #ff3b30 15%, transparent); color: #ff3b30; }
 
     /* ── Buttons ─────────────────────────────────────────────────────────────── */
 
@@ -255,9 +296,9 @@
     }
 
     .qty-display {
-      min-width: 38px;
+      min-width: 44px;
       text-align: center;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--tg-theme-text-color, #000);
     }
@@ -327,18 +368,18 @@
       opacity: 0.85;
     }
 
-    /* ── Bottom Sheet ────────────────────────────────────────────────────────── */
+    /* ── Bottom Sheets (Add & Detail) ────────────────────────────────────────── */
 
-    #sheet-overlay {
+    .sheet-backdrop {
       display: none;
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.35);
       z-index: 40;
     }
-    #sheet-overlay.visible { display: block; }
+    .sheet-backdrop.visible { display: block; }
 
-    #sheet {
+    .bottom-sheet {
       position: fixed;
       bottom: 0; left: 0; right: 0;
       background: var(--tg-theme-bg-color, #fff);
@@ -347,8 +388,10 @@
       z-index: 41;
       transform: translateY(100%);
       transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 85vh;
+      overflow-y: auto;
     }
-    #sheet.open { transform: translateY(0); }
+    .bottom-sheet.open { transform: translateY(0); }
 
     .sheet-handle {
       width: 36px;
@@ -362,6 +405,23 @@
       font-size: 17px;
       font-weight: 700;
       margin-bottom: 16px;
+    }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .detail-header .sheet-title {
+      margin-bottom: 16px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .detail-delete-btn {
+      background: color-mix(in srgb, #ff3b30 12%, transparent);
+      color: #ff3b30;
     }
 
     .sheet-field {
@@ -435,6 +495,62 @@
     }
     #add-btn:disabled { opacity: 0.45; }
     #add-btn:not(:disabled):active { opacity: 0.8; }
+
+    /* ── Füllstand-Slider ────────────────────────────────────────────────────── */
+
+    .detail-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(
+        to right,
+        var(--fill-color, #34c759) 0%,
+        var(--fill-color, #34c759) var(--fill-pct, 100%),
+        var(--tg-theme-secondary-bg-color, #e5e5ea) var(--fill-pct, 100%),
+        var(--tg-theme-secondary-bg-color, #e5e5ea) 100%
+      );
+      outline: none;
+      margin: 14px 0 6px;
+    }
+    .detail-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--fill-color, #34c759);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      cursor: pointer;
+    }
+    .detail-slider::-moz-range-track {
+      height: 6px;
+      border-radius: 3px;
+      background: transparent;
+    }
+    .detail-slider::-moz-range-progress {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--fill-color, #34c759);
+    }
+    .detail-slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--fill-color, #34c759);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      cursor: pointer;
+    }
+
+    .slider-readout {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .slider-readout .pct { font-size: 20px; font-weight: 700; }
+    .slider-readout .abs { font-size: 13px; color: var(--tg-theme-hint-color, #888); }
   </style>
 </head>
 <body>
@@ -454,8 +570,9 @@
 
   <div id="items-list"></div>
 
-  <div id="sheet-overlay"></div>
-  <div id="sheet">
+  <!-- Add-Sheet -->
+  <div id="sheet-overlay" class="sheet-backdrop"></div>
+  <div id="sheet" class="bottom-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Artikel hinzufügen</div>
 
@@ -475,7 +592,7 @@
       </div>
     </div>
 
-    <div class="unit-chips">
+    <div class="unit-chips" id="add-unit-chips">
       <button class="chip" data-unit="Stk">Stk</button>
       <button class="chip" data-unit="g">g</button>
       <button class="chip" data-unit="kg">kg</button>
@@ -484,7 +601,63 @@
       <button class="chip" data-unit="Pkg">Pkg</button>
     </div>
 
+    <div class="sheet-field" style="margin-top: 16px;">
+      <label>Kategorie</label>
+      <div class="unit-chips" id="add-category-chips">
+        <button class="chip" data-category="kuehlschrank">🧊 Kühlschrank</button>
+        <button class="chip" data-category="tiefkuehlfach">❄️ Tiefkühlfach</button>
+        <button class="chip" data-category="speisekammer">🥫 Speisekammer</button>
+      </div>
+    </div>
+
     <button id="add-btn" disabled>Hinzufügen</button>
+  </div>
+
+  <!-- Detail-Sheet -->
+  <div id="detail-overlay" class="sheet-backdrop"></div>
+  <div id="detail-sheet" class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="detail-header">
+      <div class="sheet-title" id="detail-name"></div>
+      <button id="detail-delete-btn" class="btn detail-delete-btn" title="Artikel löschen">🗑️</button>
+    </div>
+
+    <div class="sheet-field">
+      <label>Kategorie</label>
+      <div class="unit-chips" id="detail-category-chips">
+        <button class="chip" data-category="kuehlschrank">🧊 Kühlschrank</button>
+        <button class="chip" data-category="tiefkuehlfach">❄️ Tiefkühlfach</button>
+        <button class="chip" data-category="speisekammer">🥫 Speisekammer</button>
+      </div>
+    </div>
+
+    <div class="sheet-field">
+      <label>Mindesthaltbarkeit</label>
+      <input id="detail-expiry" type="date">
+      <div class="unit-chips" id="detail-expiry-chips">
+        <button class="chip" data-days="3">+3 Tage</button>
+        <button class="chip" data-days="7">+1 Woche</button>
+        <button class="chip" data-days="14">+2 Wochen</button>
+        <button class="chip" data-days="30">+1 Monat</button>
+        <button class="chip" id="detail-expiry-clear">Entfernen</button>
+      </div>
+    </div>
+
+    <div class="sheet-field" id="detail-amount-field">
+      <label>Menge</label>
+      <div id="detail-slider-block">
+        <input id="detail-slider" class="detail-slider" type="range" min="0" max="100" step="5">
+        <div class="slider-readout">
+          <span class="pct" id="detail-slider-pct"></span>
+          <span class="abs" id="detail-slider-abs"></span>
+        </div>
+      </div>
+      <div id="detail-stepper-block" class="qty-control">
+        <button class="btn qty-btn minus-btn" id="detail-minus-btn">−</button>
+        <span class="qty-display" id="detail-stepper-display"></span>
+        <button class="btn qty-btn plus-btn" id="detail-plus-btn">+</button>
+      </div>
+    </div>
   </div>
 
   <div id="scan-overlay">
@@ -506,56 +679,32 @@
     // Items zeroed in this session – deleted on pagehide
     const zeroedItems = new Set();
     let allItems = [];
+    let currentItem = null; // aktuell im Detail-Sheet geöffneter Artikel
 
-    // ── EMOJI ─────────────────────────────────────────────────────────────────
+    // ── KATEGORIEN ────────────────────────────────────────────────────────────
 
-    function getEmoji(name) {
+    const CATEGORY_ORDER = ['kuehlschrank', 'tiefkuehlfach', 'speisekammer'];
+    const CATEGORY_META = {
+      kuehlschrank:  { label: 'Kühlschrank',  icon: '🧊' },
+      tiefkuehlfach: { label: 'Tiefkühlfach', icon: '❄️' },
+      speisekammer:  { label: 'Speisekammer', icon: '🥫' },
+    };
+    const MEASURABLE_UNITS = ['g', 'kg', 'ml', 'l'];
+
+    function isMeasurableUnit(unit) {
+      return !!unit && MEASURABLE_UNITS.includes(unit.toLowerCase());
+    }
+
+    function guessCategory(name) {
       const n = name.toLowerCase();
-      if (/milch|milk/.test(n))                              return '🥛';
-      if (/käse|cheese/.test(n))                             return '🧀';
-      if (/butter/.test(n))                                  return '🧈';
-      if (/joghurt|yogurt/.test(n))                          return '🫙';
-      if (/sahne|creme fraiche|schmand|quark/.test(n))       return '🥛';
-      if (/\bei\b|eier/.test(n))                             return '🥚';
-      if (/salami|wurst|schinken|fleisch|hack|schnitzel|hähnchen|hühnchen/.test(n)) return '🥩';
-      if (/fisch|lachs|thunfisch|forelle|hering/.test(n))   return '🐟';
-      if (/shrimp|garnele/.test(n))                          return '🦐';
-      if (/karotte|möhre/.test(n))                           return '🥕';
-      if (/tomate/.test(n))                                  return '🍅';
-      if (/paprika/.test(n))                                 return '🫑';
-      if (/gurke/.test(n))                                   return '🥒';
-      if (/salat|rucola|spinat/.test(n))                     return '🥬';
-      if (/zwiebel/.test(n))                                 return '🧅';
-      if (/knoblauch/.test(n))                               return '🧄';
-      if (/brokkoli/.test(n))                                return '🥦';
-      if (/champignon|pilz/.test(n))                         return '🍄';
-      if (/apfel/.test(n))                                   return '🍎';
-      if (/banane/.test(n))                                  return '🍌';
-      if (/orange|mandarine/.test(n))                        return '🍊';
-      if (/zitrone/.test(n))                                 return '🍋';
-      if (/erdbeere/.test(n))                                return '🍓';
-      if (/traube/.test(n))                                  return '🍇';
-      if (/heidelbeere|blaubeere/.test(n))                   return '🫐';
-      if (/avocado/.test(n))                                 return '🥑';
-      if (/mais/.test(n))                                    return '🌽';
-      if (/kartoffel/.test(n))                               return '🥔';
-      if (/honig/.test(n))                                   return '🍯';
-      if (/marmelade|konfitüre/.test(n))                     return '🫙';
-      if (/mayo|mayonnaise/.test(n))                         return '🫙';
-      if (/senf/.test(n))                                    return '🫙';
-      if (/ketchup/.test(n))                                 return '🍅';
-      if (/saft|juice/.test(n))                              return '🧃';
-      if (/wasser/.test(n))                                  return '💧';
-      if (/bier/.test(n))                                    return '🍺';
-      if (/wein/.test(n))                                    return '🍷';
-      if (/brot|brötchen|toast/.test(n))                     return '🍞';
-      if (/öl|oil/.test(n))                                  return '🫒';
-      if (/schokolade|schoko/.test(n))                       return '🍫';
-      if (/\beis\b/.test(n))                                 return '🍦';
-      if (/pizza/.test(n))                                   return '🍕';
-      if (/nudel|pasta/.test(n))                             return '🍝';
-      if (/reis/.test(n))                                    return '🍚';
-      return '🛒';
+
+      if (/tiefgekühlt|tiefkühl|\btk[\s-]|pommes|fischstäbchen|eiscreme|\beis\b|garnele|shrimp/.test(n)) return 'tiefkuehlfach';
+
+      if (/milch|milk|käse|cheese|butter|joghurt|yogurt|sahne|creme fraiche|schmand|quark|\bei\b|eier|salami|wurst|schinken|fleisch|hack|schnitzel|hähnchen|hühnchen|fisch|lachs|thunfisch|forelle|hering|karotte|möhre|tomate|paprika|gurke|salat|rucola|spinat|brokkoli|champignon|pilz|apfel|banane|orange|mandarine|zitrone|erdbeere|traube|heidelbeere|blaubeere|avocado|mayo|mayonnaise/.test(n)) return 'kuehlschrank';
+
+      if (/zwiebel|knoblauch|kartoffel|mais|honig|marmelade|konfitüre|senf|ketchup|saft|juice|wasser|bier|wein|brot|brötchen|toast|öl\b|oil|schokolade|schoko|pizza|nudel|pasta|reis|mehl|zucker|salz|gewürz|konserve|dose|linsen|müsli|hafer|kaffee|\btee\b/.test(n)) return 'speisekammer';
+
+      return 'kuehlschrank';
     }
 
     // ── SKELETON ──────────────────────────────────────────────────────────────
@@ -563,9 +712,7 @@
     function renderSkeleton() {
       document.getElementById('items-list').innerHTML = Array(6).fill('').map(() => `
         <div class="skeleton-item">
-          <div class="skel skel-emoji"></div>
           <div class="skel skel-text"></div>
-          <div class="skel skel-btn"></div>
           <div class="skel skel-btn"></div>
         </div>`).join('');
     }
@@ -578,9 +725,74 @@
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function updateStickyOffset() {
+      const el = document.querySelector('.sticky-top');
+      if (el) document.documentElement.style.setProperty('--sticky-offset', el.offsetHeight + 'px');
+    }
+
     function renderItems(items) {
       allItems = items;
       applyFilter(document.getElementById('search').value);
+      updateStickyOffset();
+    }
+
+    function renderExpiryBadge(expiryDate) {
+      if (!expiryDate) return '';
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const exp = new Date(expiryDate + 'T00:00:00');
+      const diffDays = Math.round((exp - today) / 86400000);
+      if (diffDays < 0) return `<span class="expiry-badge expired">Abgelaufen</span>`;
+      if (diffDays <= 3) return `<span class="expiry-badge soon">${diffDays === 0 ? 'Heute' : `in ${diffDays} Tag${diffDays > 1 ? 'en' : ''}`}</span>`;
+      return '';
+    }
+
+    function renderItemRow(item) {
+      const hasQty = item.quantity != null;
+      const unit    = item.unit ?? '';
+      const zeroed  = zeroedItems.has(item.name);
+      const dispQty = zeroed ? 0 : item.quantity;
+      const measurable = hasQty && isMeasurableUnit(unit) && item.fullQuantity;
+
+      let pill = '';
+      if (hasQty) {
+        if (measurable) {
+          const pct = zeroed ? 0 : Math.round((dispQty / item.fullQuantity) * 100);
+          pill = `<span class="info-pill">${pct}%</span>`;
+        } else {
+          pill = `<span class="info-pill">${dispQty}${unit ? ' ' + escHtml(unit) : ''}</span>`;
+        }
+      }
+
+      const controls = hasQty
+        ? ''
+        : `<button class="btn remove-btn" data-action="remove">✓</button>`;
+
+      return `
+        <div class="item-wrap">
+          <div class="swipe-bg">🗑️</div>
+          <div class="item${zeroed ? ' zeroed' : ''}" data-name="${escHtml(item.name)}">
+            <div class="item-info">
+              <div class="item-name">${escHtml(item.name)}</div>
+            </div>
+            ${renderExpiryBadge(item.expiryDate)}
+            ${pill}
+            <button class="btn bring-btn${zeroed ? ' pulse' : ''}" data-action="bring">🛒</button>
+            ${controls}
+          </div>
+        </div>`;
+    }
+
+    function renderGroup(cat, items) {
+      const meta = CATEGORY_META[cat];
+      const body = items.length
+        ? items.map(renderItemRow).join('')
+        : '<div class="group-empty">Keine Artikel</div>';
+      return `
+        <div class="category-group">
+          <div class="category-header">${meta.icon} ${meta.label} <span class="category-count">${items.length}</span></div>
+          ${body}
+        </div>`;
     }
 
     function applyFilter(query = '') {
@@ -588,43 +800,19 @@
       const filtered = q ? allItems.filter(i => i.name.toLowerCase().includes(q)) : allItems;
       const container = document.getElementById('items-list');
 
-      if (!filtered.length) {
-        container.innerHTML = q
-          ? '<div class="empty-state"><div class="icon">🔍</div><p>Nichts gefunden</p></div>'
-          : '<div class="empty-state"><div class="icon">🫙</div><p>Kühlschrank ist leer</p></div>';
+      if (!allItems.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">🫙</div><p>Kühlschrank ist leer</p></div>';
+        return;
+      }
+      if (q && !filtered.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>Nichts gefunden</p></div>';
         return;
       }
 
-      container.innerHTML = filtered.map(item => {
-        const hasQty  = item.quantity != null;
-        const unit    = item.unit ?? '';
-        const zeroed  = zeroedItems.has(item.name);
-        const dispQty = zeroed ? 0 : item.quantity;
-        const emoji   = getEmoji(item.name);
-
-        const controls = hasQty
-          ? `<div class="qty-control">
-               <button class="btn qty-btn minus-btn" data-action="minus">−</button>
-               <span class="qty-display">${dispQty}${unit ? '&nbsp;' + escHtml(unit) : ''}</span>
-               <button class="btn qty-btn plus-btn" data-action="plus">+</button>
-             </div>`
-          : `<button class="btn remove-btn" data-action="remove">✓</button>`;
-
-        return `
-          <div class="item-wrap">
-            <div class="swipe-bg">🗑️</div>
-            <div class="item${zeroed ? ' zeroed' : ''}"
-                 data-name="${escHtml(item.name)}"
-                 data-quantity="${hasQty ? dispQty : ''}"
-                 data-unit="${escHtml(unit)}">
-              <span class="item-emoji">${emoji}</span>
-              <div class="item-info">
-                <div class="item-name">${escHtml(item.name)}</div>
-              </div>
-              <button class="btn bring-btn${zeroed ? ' pulse' : ''}" data-action="bring">🛒</button>
-              ${controls}
-            </div>
-          </div>`;
+      container.innerHTML = CATEGORY_ORDER.map(cat => {
+        const items = filtered.filter(i => (i.category || 'kuehlschrank') === cat);
+        if (q && !items.length) return '';
+        return renderGroup(cat, items);
       }).join('');
 
       document.querySelectorAll('.item-wrap').forEach(attachSwipe);
@@ -703,77 +891,13 @@
       const target = wrap ?? itemEl.closest('.item-wrap');
       itemEl.classList.add('removing');
       await fetch(`/api/fridge/${encodeURIComponent(name)}`, { method: 'DELETE', headers });
+      allItems = allItems.filter(i => i.name !== name);
+      zeroedItems.delete(name);
       setTimeout(() => {
-        target?.remove();
-        allItems = allItems.filter(i => i.name !== name);
-        zeroedItems.delete(name);
-        if (!document.querySelector('.item')) applyFilter('');
+        applyFilter(document.getElementById('search').value);
       }, 220);
       tg.HapticFeedback?.notificationOccurred('success');
       enableUndo();
-    }
-
-    function zeroItem(name, itemEl) {
-      zeroedItems.add(name);
-      itemEl.classList.add('zeroed');
-      itemEl.dataset.quantity = '0';
-      const display = itemEl.querySelector('.qty-display');
-      const unit = itemEl.dataset.unit;
-      if (display) display.textContent = `0${unit ? ' ' + unit : ''}`;
-
-      const bring = itemEl.querySelector('.bring-btn');
-      if (bring) {
-        bring.classList.remove('pulse');
-        void bring.offsetWidth;
-        bring.classList.add('pulse');
-      }
-      tg.HapticFeedback?.notificationOccurred('warning');
-    }
-
-    function unzeroItem(name, itemEl) {
-      zeroedItems.delete(name);
-      itemEl.classList.remove('zeroed');
-    }
-
-    async function adjustQty(name, itemEl, delta) {
-      const rawQty  = itemEl.dataset.quantity;
-      const qty     = rawQty !== '' ? parseFloat(rawQty) : null;
-      const unit    = itemEl.dataset.unit;
-      const zeroed  = zeroedItems.has(name);
-
-      if (zeroed) {
-        if (delta < 0) return; // already at 0
-        // Un-zero: backend still holds previous qty (we never called PATCH for zeroing)
-        unzeroItem(name, itemEl);
-        itemEl.dataset.quantity = '1';
-        const display = itemEl.querySelector('.qty-display');
-        if (display) display.textContent = `1${unit ? ' ' + unit : ''}`;
-        tg.HapticFeedback?.notificationOccurred('success');
-        return;
-      }
-
-      const newQty = qty !== null
-        ? parseFloat((qty + delta).toFixed(3))
-        : (delta > 0 ? 1 : 0);
-
-      if (newQty <= 0) {
-        zeroItem(name, itemEl);
-        // Don't call PATCH – item stays in backend until pagehide
-        return;
-      }
-
-      itemEl.dataset.quantity = newQty;
-      const display = itemEl.querySelector('.qty-display');
-      if (display) display.textContent = `${newQty}${unit ? ' ' + unit : ''}`;
-
-      const item = allItems.find(i => i.name === name);
-      if (item) item.quantity = newQty;
-
-      tg.HapticFeedback?.notificationOccurred('success');
-      enableUndo();
-      fetch(`/api/fridge/${encodeURIComponent(name)}`, {
-        method: 'PATCH', headers, body: JSON.stringify({ delta }),
-      });
     }
 
     async function addToBring(name, btn) {
@@ -792,7 +916,7 @@
       }
     }
 
-    // ── QTY AUTO-REPEAT ───────────────────────────────────────────────────────
+    // ── AUTO-REPEAT (für Stepper im Detail-Sheet) ────────────────────────────
 
     let repeatTimer = null, repeatInterval = null;
 
@@ -807,32 +931,15 @@
       repeatTimer = repeatInterval = null;
     }
 
-    // ── EVENT LISTENERS ───────────────────────────────────────────────────────
+    // ── EVENT LISTENERS (Liste) ───────────────────────────────────────────────
 
     document.getElementById('items-list').addEventListener('click', e => {
       const item = e.target.closest('.item');
       if (!item) return;
       const name = item.dataset.name;
-      if (e.target.closest('.remove-btn')) deleteItem(name, item);
-      else if (e.target.closest('.bring-btn')) addToBring(name, e.target.closest('.bring-btn'));
-    });
-
-    document.getElementById('items-list').addEventListener('pointerdown', e => {
-      const btn = e.target.closest('.qty-btn');
-      if (!btn) return;
-      const item = btn.closest('.item');
-      if (!item) return;
-      const name  = item.dataset.name;
-      const delta = btn.classList.contains('minus-btn') ? -1 : 1;
-
-      btn.classList.add('pressing');
-      btn.setPointerCapture(e.pointerId);
-
-      startRepeat(() => adjustQty(name, item, delta));
-
-      const stop = () => { stopRepeat(); btn.classList.remove('pressing'); };
-      btn.addEventListener('pointerup',     stop, { once: true });
-      btn.addEventListener('pointercancel', stop, { once: true });
+      if (e.target.closest('.remove-btn')) { deleteItem(name, item); return; }
+      if (e.target.closest('.bring-btn')) { addToBring(name, e.target.closest('.bring-btn')); return; }
+      openDetail(name);
     });
 
     document.getElementById('search').addEventListener('input', e => {
@@ -840,6 +947,8 @@
     });
 
     document.getElementById('undo-btn').addEventListener('click', handleUndo);
+
+    window.addEventListener('resize', updateStickyOffset);
 
     // Batch-delete zeroed items when app closes
     window.addEventListener('pagehide', () => {
@@ -869,7 +978,225 @@
 
     loadItems();
 
-    // ── BOTTOM SHEET ──────────────────────────────────────────────────────────
+    // ── DETAIL-SHEET (MHD, Füllstand, Kategorie) ─────────────────────────────
+
+    const detailOverlay   = document.getElementById('detail-overlay');
+    const detailSheet     = document.getElementById('detail-sheet');
+    const detailName      = document.getElementById('detail-name');
+    const detailExpiry    = document.getElementById('detail-expiry');
+    const detailSlider    = document.getElementById('detail-slider');
+    const detailSliderPct = document.getElementById('detail-slider-pct');
+    const detailSliderAbs = document.getElementById('detail-slider-abs');
+    const detailStepperDisplay = document.getElementById('detail-stepper-display');
+    const detailAmountField    = document.getElementById('detail-amount-field');
+    const detailSliderBlock    = document.getElementById('detail-slider-block');
+    const detailStepperBlock   = document.getElementById('detail-stepper-block');
+
+    function patchItem(name, patch) {
+      return fetch(`/api/fridge/${encodeURIComponent(name)}`, {
+        method: 'PATCH', headers, body: JSON.stringify(patch),
+      });
+    }
+
+    function applySliderStyle(pct) {
+      const hue = Math.round(Math.max(0, Math.min(100, pct)) * 1.2);
+      detailSlider.style.setProperty('--fill-pct', pct + '%');
+      detailSlider.style.setProperty('--fill-color', `hsl(${hue}, 70%, 45%)`);
+    }
+
+    function updateSliderUI() {
+      const zeroed = zeroedItems.has(currentItem.name);
+      const pct = zeroed ? 0 : Math.round((currentItem.quantity / currentItem.fullQuantity) * 100);
+      const abs = zeroed ? 0 : currentItem.quantity;
+      detailSlider.value = pct;
+      applySliderStyle(pct);
+      detailSliderPct.textContent = `${pct}%`;
+      detailSliderAbs.textContent = `≈ ${abs} ${currentItem.unit} von ${currentItem.fullQuantity} ${currentItem.unit}`;
+    }
+
+    function updateStepperUI() {
+      const zeroed = zeroedItems.has(currentItem.name);
+      const qty = zeroed ? 0 : currentItem.quantity;
+      const unit = currentItem.unit ?? '';
+      detailStepperDisplay.textContent = `${qty}${unit ? ' ' + unit : ''}`;
+    }
+
+    function renderDetail() {
+      detailName.textContent = currentItem.name;
+
+      document.querySelectorAll('#detail-category-chips .chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.category === currentItem.category);
+      });
+
+      detailExpiry.value = currentItem.expiryDate ?? '';
+
+      if (currentItem.quantity == null) {
+        detailAmountField.style.display = 'none';
+        return;
+      }
+      detailAmountField.style.display = '';
+      const measurable = isMeasurableUnit(currentItem.unit) && currentItem.fullQuantity;
+      detailSliderBlock.style.display  = measurable ? '' : 'none';
+      detailStepperBlock.style.display = measurable ? 'none' : '';
+      if (measurable) updateSliderUI(); else updateStepperUI();
+    }
+
+    function openDetail(name) {
+      const item = allItems.find(i => i.name === name);
+      if (!item) return;
+      currentItem = item;
+      renderDetail();
+      detailOverlay.classList.add('visible');
+      detailSheet.classList.add('open');
+    }
+
+    function closeDetail() {
+      detailSheet.classList.remove('open');
+      detailOverlay.classList.remove('visible');
+      currentItem = null;
+    }
+
+    detailOverlay.addEventListener('click', closeDetail);
+
+    let detailStartY = 0;
+    detailSheet.addEventListener('touchstart', e => { detailStartY = e.touches[0].clientY; }, { passive: true });
+    detailSheet.addEventListener('touchend', e => {
+      if (e.changedTouches[0].clientY - detailStartY > 60) closeDetail();
+    }, { passive: true });
+
+    // Kategorie ändern
+    document.querySelectorAll('#detail-category-chips .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (!currentItem) return;
+        currentItem.category = chip.dataset.category;
+        document.querySelectorAll('#detail-category-chips .chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        applyFilter(document.getElementById('search').value);
+        tg.HapticFeedback?.notificationOccurred('success');
+        patchItem(currentItem.name, { category: currentItem.category });
+      });
+    });
+
+    // MHD
+    function commitExpiry(value) {
+      currentItem.expiryDate = value;
+      detailExpiry.value = value ?? '';
+      applyFilter(document.getElementById('search').value);
+      tg.HapticFeedback?.notificationOccurred('success');
+      patchItem(currentItem.name, { expiryDate: value });
+    }
+
+    detailExpiry.addEventListener('change', () => {
+      if (!currentItem) return;
+      commitExpiry(detailExpiry.value || null);
+    });
+
+    document.querySelectorAll('#detail-expiry-chips .chip[data-days]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (!currentItem) return;
+        const d = new Date();
+        d.setDate(d.getDate() + parseInt(chip.dataset.days, 10));
+        commitExpiry(d.toISOString().slice(0, 10));
+      });
+    });
+
+    document.getElementById('detail-expiry-clear').addEventListener('click', () => {
+      if (!currentItem) return;
+      commitExpiry(null);
+    });
+
+    // Füllstand-Slider
+    detailSlider.addEventListener('input', () => {
+      const pct = parseInt(detailSlider.value, 10);
+      applySliderStyle(pct);
+      const abs = Math.round(currentItem.fullQuantity * pct / 100 * 100) / 100;
+      detailSliderPct.textContent = `${pct}%`;
+      detailSliderAbs.textContent = `≈ ${abs} ${currentItem.unit} von ${currentItem.fullQuantity} ${currentItem.unit}`;
+    });
+
+    detailSlider.addEventListener('change', () => {
+      if (!currentItem) return;
+      const pct = parseInt(detailSlider.value, 10);
+      if (pct <= 0) {
+        zeroedItems.add(currentItem.name);
+        updateSliderUI();
+        tg.HapticFeedback?.notificationOccurred('warning');
+        applyFilter(document.getElementById('search').value);
+        return;
+      }
+      zeroedItems.delete(currentItem.name);
+      const qty = Math.round(currentItem.fullQuantity * pct / 100 * 100) / 100;
+      currentItem.quantity = qty;
+      updateSliderUI();
+      tg.HapticFeedback?.notificationOccurred('success');
+      enableUndo();
+      applyFilter(document.getElementById('search').value);
+      patchItem(currentItem.name, { quantity: qty });
+    });
+
+    // Stepper (zählbare Artikel)
+    function detailAdjustQty(delta) {
+      const zeroed = zeroedItems.has(currentItem.name);
+      if (zeroed) {
+        if (delta < 0) return;
+        zeroedItems.delete(currentItem.name);
+        currentItem.quantity = 1;
+        updateStepperUI();
+        tg.HapticFeedback?.notificationOccurred('success');
+        enableUndo();
+        applyFilter(document.getElementById('search').value);
+        return;
+      }
+      const newQty = parseFloat(((currentItem.quantity ?? 0) + delta).toFixed(3));
+      if (newQty <= 0) {
+        zeroedItems.add(currentItem.name);
+        updateStepperUI();
+        tg.HapticFeedback?.notificationOccurred('warning');
+        applyFilter(document.getElementById('search').value);
+        return;
+      }
+      currentItem.quantity = newQty;
+      updateStepperUI();
+      tg.HapticFeedback?.notificationOccurred('success');
+      enableUndo();
+      applyFilter(document.getElementById('search').value);
+      patchItem(currentItem.name, { delta });
+    }
+
+    document.getElementById('detail-minus-btn').addEventListener('pointerdown', e => {
+      const btn = e.currentTarget;
+      btn.classList.add('pressing');
+      btn.setPointerCapture(e.pointerId);
+      startRepeat(() => detailAdjustQty(-1));
+      const stop = () => { stopRepeat(); btn.classList.remove('pressing'); };
+      btn.addEventListener('pointerup', stop, { once: true });
+      btn.addEventListener('pointercancel', stop, { once: true });
+    });
+
+    document.getElementById('detail-plus-btn').addEventListener('pointerdown', e => {
+      const btn = e.currentTarget;
+      btn.classList.add('pressing');
+      btn.setPointerCapture(e.pointerId);
+      startRepeat(() => detailAdjustQty(1));
+      const stop = () => { stopRepeat(); btn.classList.remove('pressing'); };
+      btn.addEventListener('pointerup', stop, { once: true });
+      btn.addEventListener('pointercancel', stop, { once: true });
+    });
+
+    // Löschen
+    document.getElementById('detail-delete-btn').addEventListener('click', async () => {
+      if (!currentItem) return;
+      const name = currentItem.name;
+      closeDetail();
+      await fetch(`/api/fridge/${encodeURIComponent(name)}`, { method: 'DELETE', headers });
+      allItems = allItems.filter(i => i.name !== name);
+      zeroedItems.delete(name);
+      applyFilter(document.getElementById('search').value);
+      tg.HapticFeedback?.notificationOccurred('success');
+      enableUndo();
+    });
+
+    // ── ADD-SHEET ─────────────────────────────────────────────────────────────
 
     const fab      = document.getElementById('fab');
     const sheet    = document.getElementById('sheet');
@@ -878,6 +1205,15 @@
     const inpQty   = document.getElementById('inp-qty');
     const inpUnit  = document.getElementById('inp-unit');
     const addBtn   = document.getElementById('add-btn');
+
+    let selectedCategory = 'kuehlschrank';
+    let categoryManuallySet = false;
+
+    function setAddCategoryChips(category) {
+      document.querySelectorAll('#add-category-chips .chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.category === category);
+      });
+    }
 
     function openSheet() {
       overlay.classList.add('visible');
@@ -893,7 +1229,10 @@
       inpName.value = '';
       inpQty.value  = '';
       inpUnit.value = '';
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#add-unit-chips .chip').forEach(c => c.classList.remove('active'));
+      selectedCategory = 'kuehlschrank';
+      categoryManuallySet = false;
+      setAddCategoryChips(selectedCategory);
       addBtn.disabled = true;
     }
 
@@ -904,11 +1243,15 @@
 
     inpName.addEventListener('input', () => {
       addBtn.disabled = !inpName.value.trim();
+      if (!categoryManuallySet && inpName.value.trim()) {
+        selectedCategory = guessCategory(inpName.value);
+        setAddCategoryChips(selectedCategory);
+      }
     });
 
-    document.querySelectorAll('.chip').forEach(chip => {
+    document.querySelectorAll('#add-unit-chips .chip').forEach(chip => {
       chip.addEventListener('click', () => {
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('#add-unit-chips .chip').forEach(c => c.classList.remove('active'));
         if (inpUnit.value === chip.dataset.unit) {
           inpUnit.value = '';
         } else {
@@ -918,8 +1261,16 @@
       });
     });
 
+    document.querySelectorAll('#add-category-chips .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        selectedCategory = chip.dataset.category;
+        categoryManuallySet = true;
+        setAddCategoryChips(selectedCategory);
+      });
+    });
+
     inpUnit.addEventListener('input', () => {
-      document.querySelectorAll('.chip').forEach(c => {
+      document.querySelectorAll('#add-unit-chips .chip').forEach(c => {
         c.classList.toggle('active', c.dataset.unit === inpUnit.value);
       });
     });
@@ -934,7 +1285,7 @@
       try {
         const res   = await fetch('/api/fridge/add', {
           method: 'POST', headers,
-          body: JSON.stringify({ name, quantity: qty, unit }),
+          body: JSON.stringify({ name, quantity: qty, unit, category: selectedCategory }),
         });
         const { items } = await res.json();
         renderItems(items);
@@ -1003,9 +1354,12 @@
           inpQty.value  = data.product.quantity ?? '';
           inpUnit.value = data.product.unit ?? '';
           addBtn.disabled = !inpName.value.trim();
-          document.querySelectorAll('.chip').forEach(c => {
+          document.querySelectorAll('#add-unit-chips .chip').forEach(c => {
             c.classList.toggle('active', c.dataset.unit === inpUnit.value);
           });
+          selectedCategory = guessCategory(inpName.value);
+          categoryManuallySet = false;
+          setAddCategoryChips(selectedCategory);
         } else {
           tg.HapticFeedback?.notificationOccurred('warning');
         }

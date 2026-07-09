@@ -5,10 +5,24 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FILE = join(__dirname, 'kuehlschrank.json');
 
+const CATEGORIES = ['kuehlschrank', 'tiefkuehlfach', 'speisekammer'];
+const MEASURABLE_UNITS = ['g', 'kg', 'ml', 'l'];
+
+function isMeasurableUnit(unit) {
+  return !!unit && MEASURABLE_UNITS.includes(unit.toLowerCase());
+}
+
 function load() {
   if (!existsSync(FILE)) return { items: [] };
   try {
-    return JSON.parse(readFileSync(FILE, 'utf8'));
+    const data = JSON.parse(readFileSync(FILE, 'utf8'));
+    data.items = (data.items || []).map(i => ({
+      ...i,
+      category: CATEGORIES.includes(i.category) ? i.category : 'kuehlschrank',
+      expiryDate: i.expiryDate ?? null,
+      fullQuantity: i.fullQuantity ?? null,
+    }));
+    return data;
   } catch {
     return { items: [] };
   }
@@ -35,11 +49,18 @@ export function getFridgeContents() {
   return load().items;
 }
 
+function earliestDate(a, b) {
+  if (!a) return b ?? null;
+  if (!b) return a;
+  return a < b ? a : b;
+}
+
 export function addItems(newItems) {
   const data = load();
   for (const newItem of newItems) {
     const name = newItem.name?.trim();
     if (!name) continue;
+    const category = CATEGORIES.includes(newItem.category) ? newItem.category : null;
     const existing = data.items.find(
       i => i.name.toLowerCase() === name.toLowerCase()
     );
@@ -50,8 +71,22 @@ export function addItems(newItems) {
         existing.quantity = newItem.quantity ?? existing.quantity;
         existing.unit = newItem.unit ?? existing.unit;
       }
+      if (isMeasurableUnit(existing.unit) && existing.quantity != null) {
+        existing.fullQuantity = existing.quantity;
+      }
+      existing.expiryDate = earliestDate(existing.expiryDate, newItem.expiryDate ?? null);
+      if (category) existing.category = category;
     } else {
-      data.items.push({ name, quantity: newItem.quantity ?? null, unit: newItem.unit ?? null });
+      const quantity = newItem.quantity ?? null;
+      const unit = newItem.unit ?? null;
+      data.items.push({
+        name,
+        quantity,
+        unit,
+        category: category ?? 'kuehlschrank',
+        expiryDate: newItem.expiryDate ?? null,
+        fullQuantity: isMeasurableUnit(unit) && quantity != null ? quantity : null,
+      });
     }
   }
   save(data);
@@ -81,6 +116,33 @@ export function adjustItem(name, delta) {
   item.quantity = newQty;
   save(data);
   return { found: true, removed: false, newQuantity: item.quantity };
+}
+
+export function updateItem(name, patch) {
+  const data = load();
+  const item = data.items.find(i => i.name.toLowerCase() === name.toLowerCase().trim());
+  if (!item) return { found: false };
+
+  if (patch.quantity != null) {
+    const newQty = parseFloat(patch.quantity);
+    if (newQty <= 0) {
+      data.items = data.items.filter(i => i !== item);
+      save(data);
+      return { found: true, removed: true };
+    }
+    item.quantity = newQty;
+  }
+  if (patch.category !== undefined && CATEGORIES.includes(patch.category)) {
+    item.category = patch.category;
+  }
+  if (patch.expiryDate !== undefined) {
+    item.expiryDate = patch.expiryDate || null;
+  }
+  if (patch.fullQuantity !== undefined) {
+    item.fullQuantity = patch.fullQuantity != null ? parseFloat(patch.fullQuantity) : null;
+  }
+  save(data);
+  return { found: true, removed: false, item };
 }
 
 export function removeItems(names) {

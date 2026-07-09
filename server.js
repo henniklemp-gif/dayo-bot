@@ -2,7 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { getFridgeContents, addItems, removeItem, removeItems, adjustItem, undoLastChange } from './fridge.js';
+import { getFridgeContents, addItems, removeItem, removeItems, adjustItem, updateItem, undoLastChange } from './fridge.js';
 import { addToBring } from './bring.js';
 import { lookupProduct } from './barcode.js';
 
@@ -53,9 +53,15 @@ app.delete('/api/fridge/:name', authMiddleware, (req, res) => {
 
 app.patch('/api/fridge/:name', authMiddleware, (req, res) => {
   const name = decodeURIComponent(req.params.name);
-  const delta = parseFloat(req.body.delta);
-  if (isNaN(delta)) return res.status(400).json({ error: 'delta required' });
-  const result = adjustItem(name, delta);
+  const { delta, quantity, category, expiryDate, fullQuantity } = req.body ?? {};
+
+  if (delta !== undefined) {
+    const d = parseFloat(delta);
+    if (isNaN(d)) return res.status(400).json({ error: 'delta required' });
+    return res.json(adjustItem(name, d));
+  }
+
+  const result = updateItem(name, { quantity, category, expiryDate, fullQuantity });
   res.json(result);
 });
 
@@ -65,9 +71,9 @@ app.post('/api/fridge/undo', authMiddleware, (req, res) => {
 });
 
 app.post('/api/fridge/add', authMiddleware, (req, res) => {
-  const { name, quantity, unit } = req.body ?? {};
+  const { name, quantity, unit, category } = req.body ?? {};
   if (!name?.trim()) return res.status(400).json({ error: 'name required' });
-  addItems([{ name: name.trim(), quantity: quantity ?? null, unit: unit?.trim() || null }]);
+  addItems([{ name: name.trim(), quantity: quantity ?? null, unit: unit?.trim() || null, category }]);
   res.json({ success: true, items: getFridgeContents() });
 });
 

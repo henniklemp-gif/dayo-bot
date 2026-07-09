@@ -19,7 +19,14 @@ export async function analyzeReceipt(buffer, mimeType) {
         mediaBlock,
         {
           type: 'text',
-          text: 'Das ist ein Kassenbon. Erkenne alle Lebensmittelprodukte mit Menge und Einheit (wenn erkennbar). Ignoriere Nicht-Lebensmittel (Hygieneartikel, Pfand, etc.). Antworte NUR mit einem JSON-Array ohne weitere Erklärung: [{"name": "Produktname", "quantity": 1, "unit": "Stück"}]. Wenn Menge oder Einheit nicht erkennbar, setze null.',
+          text: `Das ist ein Kassenbon. Erkenne alle Lebensmittelprodukte mit Menge und Einheit (wenn erkennbar). Ignoriere Nicht-Lebensmittel (Hygieneartikel, Pfand, etc.).
+
+Bestimme außerdem pro Produkt die Lagerkategorie (category), eine von:
+- "kuehlschrank": gekühlte/frische Produkte (Milchprodukte, Fleisch, Fisch, frisches Obst/Gemüse, Aufschnitt, Eier)
+- "tiefkuehlfach": tiefgekühlte Produkte (Eis, TK-Gemüse, TK-Pizza, Fischstäbchen, Pommes)
+- "speisekammer": haltbare/trockene Produkte (Konserven, Nudeln, Reis, Mehl, Zucker, Öl, Gewürze, Getränke, Süßigkeiten, Brot)
+
+Antworte NUR mit einem JSON-Array ohne weitere Erklärung: [{"name": "Produktname", "quantity": 1, "unit": "Stück", "category": "kuehlschrank"}]. Wenn Menge oder Einheit nicht erkennbar, setze null.`,
         },
       ],
     }],
