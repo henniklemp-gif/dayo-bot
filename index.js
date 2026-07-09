@@ -24,7 +24,7 @@ const KEYBOARD = {
     keyboard: [
       ['📅 Heute', '📆 Woche'],
       ['🏋️ Training', '🍽️ Kochen'],
-      ['🧊 Kühlschrank'],
+      [WEBAPP_URL ? { text: '🧊 Kühlschrank', web_app: { url: WEBAPP_URL } } : '🧊 Kühlschrank'],
     ],
     resize_keyboard: true,
     persistent: true,
