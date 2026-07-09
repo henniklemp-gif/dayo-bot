@@ -978,6 +978,49 @@
 
     loadItems();
 
+    // ── SHEET DRAG-TO-CLOSE ───────────────────────────────────────────────────
+    // Nach unten wischen schließt das Sheet; preventDefault verhindert, dass
+    // die Geste stattdessen die Liste im Hintergrund scrollt. Startet die
+    // Geste auf einem Bedienelement (Input, Chip, Slider, Button), wird sie
+    // ignoriert, damit dessen eigene Touch-Bedienung unangetastet bleibt.
+
+    const SHEET_DRAG_IGNORE = 'input, .chip, .btn, .detail-slider';
+
+    function attachSheetSwipeDown(sheetEl, closeFn) {
+      let startY = 0, dy = 0, tracking = false, dragging = false;
+
+      sheetEl.addEventListener('touchstart', e => {
+        tracking = !e.target.closest(SHEET_DRAG_IGNORE);
+        if (!tracking) return;
+        startY = e.touches[0].clientY;
+        dy = 0;
+        dragging = false;
+      }, { passive: true });
+
+      sheetEl.addEventListener('touchmove', e => {
+        if (!tracking) return;
+        const moveY = e.touches[0].clientY - startY;
+        if (!dragging) {
+          if (moveY < 4) return;
+          dragging = true;
+          sheetEl.style.transition = 'none';
+        }
+        dy = Math.max(0, moveY);
+        sheetEl.style.transform = `translateY(${dy}px)`;
+        e.preventDefault();
+      }, { passive: false });
+
+      sheetEl.addEventListener('touchend', () => {
+        if (!tracking) return;
+        tracking = false;
+        if (!dragging) return;
+        dragging = false;
+        sheetEl.style.transition = '';
+        sheetEl.style.transform = '';
+        if (dy > 60) closeFn();
+      }, { passive: true });
+    }
+
     // ── DETAIL-SHEET (MHD, Füllstand, Kategorie) ─────────────────────────────
 
     const detailOverlay   = document.getElementById('detail-overlay');
@@ -1057,12 +1100,7 @@
     }
 
     detailOverlay.addEventListener('click', closeDetail);
-
-    let detailStartY = 0;
-    detailSheet.addEventListener('touchstart', e => { detailStartY = e.touches[0].clientY; }, { passive: true });
-    detailSheet.addEventListener('touchend', e => {
-      if (e.changedTouches[0].clientY - detailStartY > 60) closeDetail();
-    }, { passive: true });
+    attachSheetSwipeDown(detailSheet, closeDetail);
 
     // Kategorie ändern
     document.querySelectorAll('#detail-category-chips .chip').forEach(chip => {
@@ -1298,11 +1336,7 @@
     });
 
     // Swipe sheet down to close
-    let sheetStartY = 0;
-    sheet.addEventListener('touchstart', e => { sheetStartY = e.touches[0].clientY; }, { passive: true });
-    sheet.addEventListener('touchend', e => {
-      if (e.changedTouches[0].clientY - sheetStartY > 60) closeSheet();
-    }, { passive: true });
+    attachSheetSwipeDown(sheet, closeSheet);
 
     // ── BARCODE-SCANNER ───────────────────────────────────────────────────────
 
