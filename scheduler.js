@@ -1,14 +1,18 @@
 import cron from 'node-cron';
 import { getTodayEvents, getWeekEvents } from './calendar.js';
 import { getTodayWorkout } from './fitness.js';
-import { formatDailyOverview, formatWeekOverview } from './format.js';
+import { formatMorningOverview, formatWeekOverview } from './format.js';
+import { getDailyQuote } from './quote.js';
+import { getBitcoinPrice } from './bitcoin.js';
 
 export function initScheduler(bot, userId) {
   // Jeden Morgen 07:30 Uhr
   cron.schedule('30 7 * * *', async () => {
     try {
-      const [events, workout] = await Promise.all([getTodayEvents(), getTodayWorkout()]);
-      const text = formatDailyOverview(events, workout);
+      const [events, workout, quote, btcPrice] = await Promise.all([
+        getTodayEvents(), getTodayWorkout(), getDailyQuote(), getBitcoinPrice(),
+      ]);
+      const text = formatMorningOverview(events, workout, quote, btcPrice);
       await bot.sendMessage(userId, text, { parse_mode: 'Markdown' });
     } catch (err) {
       console.error('Scheduler daily error:', err);

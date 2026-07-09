@@ -1,3 +1,14 @@
+export function formatMorningOverview(events, workout, quote, btcPrice) {
+  let text = '';
+  if (quote) text += `_${quote}_\n\n`;
+  text += formatDailyOverview(events, workout);
+  if (btcPrice != null) {
+    const priceStr = btcPrice.toLocaleString('en-US', { maximumFractionDigits: 0 });
+    text += `\n\n₿ *Bitcoin:* $${priceStr}`;
+  }
+  return text;
+}
+
 export function formatDailyOverview(events, workout) {
   const today = new Date();
   const dayStr = today.toLocaleDateString('de-DE', {
