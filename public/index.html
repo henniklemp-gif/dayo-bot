@@ -64,7 +64,7 @@
       flex-shrink: 0;
       -webkit-tap-highlight-color: transparent;
     }
-    .header-btn img { display: block; }
+    .header-btn img, .header-btn svg { display: block; }
     .header-btn:active { transform: scale(0.88); }
     .header-btn.open { transform: rotate(45deg); }
 
@@ -443,7 +443,7 @@
       <span class="header-title">🧊 Kühlschrank</span>
       <div class="header-actions">
         <button id="scan-btn" class="header-btn" title="Barcode scannen"><img src="Emojis/E1D9.svg" alt="Barcode scannen" width="20" height="20"></button>
-        <button id="fab" class="header-btn" title="Hinzufügen">+</button>
+        <button id="fab" class="header-btn" title="Hinzufügen"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3V17M3 10H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
         <button id="undo-btn" class="header-btn undo-btn" disabled title="Rückgängig">↩</button>
       </div>
     </header>
