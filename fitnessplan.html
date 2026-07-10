@@ -2,11 +2,10 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>50-Tage Fitness-Plan</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -26,18 +25,19 @@
   }
 
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    padding-bottom: 60px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
+    overscroll-behavior: none;
   }
 
   /* HEADER */
   .header {
     background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
     border-bottom: 1px solid var(--surface);
-    padding: 24px 20px 18px;
+    padding: calc(env(safe-area-inset-top, 0px) + 24px) 20px 18px;
   }
   .header-inner {
     max-width: 680px;
@@ -246,6 +246,7 @@
   }
   .day-row.train-row { background: var(--surface2); border-color: #1e3a5f; }
   .day-row.done-row  { background: var(--green-bg); border-color: var(--green); }
+  .day-row.today-row { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
 
   .day-check {
     width: 21px; height: 21px;
@@ -435,6 +436,9 @@
 </div>
 
 <script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
 // ── DATA ──────────────────────────────────────────────────────────────────────
 
 const PHASES = [
@@ -746,6 +750,36 @@ function renderFitnessTips() {
   });
 }
 
+// ── AKTUELLE WOCHE / TAG ─────────────────────────────────────────────────────────
+
+async function jumpToCurrentDay() {
+  try {
+    const headers = tg ? { Authorization: tg.initData || '' } : {};
+    const res = await fetch('/api/fitness/status', { headers });
+    if (!res.ok) return;
+    const status = await res.json();
+    if (!status.active || !status.planDay) return;
+
+    const targetWeek = Math.ceil(status.planDay / 7);
+    if (targetWeek !== 1) {
+      const week1Days = document.getElementById('week-days-1');
+      const week1Chev = document.querySelector('.week-block[data-week="1"] .week-chevron');
+      if (week1Days) week1Days.classList.remove('open');
+      if (week1Chev) week1Chev.textContent = '▼';
+    }
+    const targetDays = document.getElementById('week-days-' + targetWeek);
+    const targetChev = document.querySelector(`.week-block[data-week="${targetWeek}"] .week-chevron`);
+    if (targetDays) targetDays.classList.add('open');
+    if (targetChev) targetChev.textContent = '▲';
+
+    const todayRow = document.querySelector(`[data-day="${status.planDay}"]`);
+    if (todayRow) {
+      todayRow.classList.add('today-row');
+      todayRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  } catch { /* kein Startdatum gesetzt oder Request fehlgeschlagen – Woche 1 bleibt offen */ }
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────────
 
 renderWeekGrid();
@@ -755,6 +789,7 @@ renderMeals();
 renderTips();
 renderFitnessTips();
 updateProgress();
+jumpToCurrentDay();
 </script>
 </body>
 </html>

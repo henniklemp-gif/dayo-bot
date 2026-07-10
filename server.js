@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { getFridgeContents, addItems, removeItem, removeItems, adjustItem, updateItem, undoLastChange } from './fridge.js';
 import { addToBring } from './bring.js';
 import { lookupProduct } from './barcode.js';
+import { getPlanStatus } from './fitness.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -40,6 +41,14 @@ function authMiddleware(req, res, next) {
   if (!validateInitData(initData)) return res.status(403).json({ error: 'Unauthorized' });
   next();
 }
+
+app.get('/fitnessplan.html', (req, res) => {
+  res.sendFile(join(__dirname, 'fitnessplan.html'));
+});
+
+app.get('/api/fitness/status', authMiddleware, (req, res) => {
+  res.json(getPlanStatus());
+});
 
 app.get('/api/fridge', authMiddleware, (req, res) => {
   res.json(getFridgeContents());

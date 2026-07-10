@@ -19,11 +19,13 @@ const MY_ID = parseInt(process.env.MY_TELEGRAM_ID, 10);
 
 const conversationHistory = {};
 
+const FITNESS_URL = WEBAPP_URL ? `${WEBAPP_URL.replace(/\/$/, '')}/fitnessplan.html` : null;
+
 const KEYBOARD = {
   reply_markup: {
     keyboard: [
       ['📅 Heute', '📆 Woche'],
-      ['🏋️ Training', '🍽️ Kochen'],
+      [FITNESS_URL ? { text: '🏋️ Training', web_app: { url: FITNESS_URL } } : '🏋️ Training', '🍽️ Kochen'],
       [WEBAPP_URL ? { text: '🧊 Kühlschrank', web_app: { url: WEBAPP_URL } } : '🧊 Kühlschrank'],
     ],
     resize_keyboard: true,
@@ -99,6 +101,12 @@ bot.onText(/\/woche/, async (msg) => {
 bot.onText(/\/training/, async (msg) => {
   if (!msg.from || !allowed(msg.from.id)) return;
   try {
+    if (FITNESS_URL) {
+      bot.sendMessage(msg.chat.id, '🏋️ Fitnessplan öffnen:', {
+        reply_markup: { inline_keyboard: [[{ text: '🏋️ Fitnessplan öffnen', web_app: { url: FITNESS_URL } }]] }
+      });
+      return;
+    }
     const workout = getTodayWorkout();
     const status  = getPlanStatus();
     if (!workout || !workout.train) {
@@ -213,6 +221,12 @@ const KEYBOARD_SHORTCUTS = {
   'Heute':        async (chatId) => { const [e, w] = await Promise.all([getTodayEvents(), getTodayWorkout()]); bot.sendMessage(chatId, formatDailyOverview(e, w), { parse_mode: 'Markdown' }); },
   'Woche':        async (chatId) => { bot.sendMessage(chatId, formatWeekOverview(await getWeekEvents()), { parse_mode: 'Markdown' }); },
   'Training':     async (chatId) => {
+    if (FITNESS_URL) {
+      await bot.sendMessage(chatId, '🏋️ Fitnessplan öffnen:', {
+        reply_markup: { inline_keyboard: [[{ text: '🏋️ Fitnessplan öffnen', web_app: { url: FITNESS_URL } }]] }
+      });
+      return;
+    }
     const workout = getTodayWorkout();
     const status  = getPlanStatus();
     if (!workout || !workout.train) {
