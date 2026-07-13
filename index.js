@@ -25,8 +25,8 @@ const KEYBOARD = {
   reply_markup: {
     keyboard: [
       ['📅 Heute', '📆 Woche'],
-      [FITNESS_URL ? { text: '🏋️ Training', web_app: { url: FITNESS_URL } } : '🏋️ Training', '🍽️ Kochen'],
-      [WEBAPP_URL ? { text: '🧊 Kühlschrank', web_app: { url: WEBAPP_URL } } : '🧊 Kühlschrank'],
+      ['🏋️ Training', '🍽️ Kochen'],
+      ['🧊 Kühlschrank'],
     ],
     resize_keyboard: true,
     persistent: true,
