@@ -968,6 +968,12 @@
       renderSkeleton();
       try {
         const res   = await fetch('/api/fridge', { headers });
+        if (!res.ok) {
+          const debug = `platform=${tg.platform} version=${tg.version} initDataLen=${initData.length}`;
+          document.getElementById('items-list').innerHTML =
+            `<div class="empty-state"><div class="icon">⚠️</div><p>Nicht autorisiert (HTTP ${res.status})</p><p style="font-size:11px;opacity:.6;margin-top:8px;">${debug}</p></div>`;
+          return;
+        }
         const items = await res.json();
         renderItems(items);
       } catch {
