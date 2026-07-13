@@ -38,7 +38,11 @@ function validateInitData(initDataString) {
 function authMiddleware(req, res, next) {
   if (process.env.NODE_ENV !== 'production') return next();
   const initData = req.headers['authorization'];
-  if (!validateInitData(initData)) return res.status(403).json({ error: 'Unauthorized' });
+  const valid = validateInitData(initData);
+  if (!valid) {
+    console.log(`[auth] Unauthorized ${req.method} ${req.path} — initData ${initData ? `present (${initData.length} chars)` : 'MISSING'}`);
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
   next();
 }
 
