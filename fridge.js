@@ -1,9 +1,8 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { Redis } from '@upstash/redis';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const FILE = join(__dirname, 'kuehlschrank.json');
+const redis = Redis.fromEnv();
+const KEY = 'kuehlschrank';
+const SNAPSHOT_KEY = 'kuehlschrank:snapshot';
 
 const CATEGORIES = ['kuehlschrank', 'tiefkuehlfach', 'speisekammer'];
 const MEASURABLE_UNITS = ['g', 'kg', 'ml', 'l'];
@@ -12,41 +11,34 @@ function isMeasurableUnit(unit) {
   return !!unit && MEASURABLE_UNITS.includes(unit.toLowerCase());
 }
 
-function load() {
-  if (!existsSync(FILE)) return { items: [] };
-  try {
-    const data = JSON.parse(readFileSync(FILE, 'utf8'));
-    data.items = (data.items || []).map(i => ({
-      ...i,
-      category: CATEGORIES.includes(i.category) ? i.category : 'kuehlschrank',
-      expiryDate: i.expiryDate ?? null,
-      fullQuantity: i.fullQuantity ?? null,
-    }));
-    return data;
-  } catch {
-    return { items: [] };
-  }
+async function load() {
+  const data = (await redis.get(KEY)) || { items: [] };
+  data.items = (data.items || []).map(i => ({
+    ...i,
+    category: CATEGORIES.includes(i.category) ? i.category : 'kuehlschrank',
+    expiryDate: i.expiryDate ?? null,
+    fullQuantity: i.fullQuantity ?? null,
+  }));
+  return data;
 }
 
-let snapshot = null;
-
-function save(data) {
-  if (existsSync(FILE)) {
-    try { snapshot = readFileSync(FILE, 'utf8'); } catch { snapshot = null; }
-  }
+async function save(data) {
+  const previous = await redis.get(KEY);
+  if (previous) await redis.set(SNAPSHOT_KEY, previous);
   data.updatedAt = new Date().toISOString();
-  writeFileSync(FILE, JSON.stringify(data, null, 2));
+  await redis.set(KEY, data);
 }
 
-export function undoLastChange() {
+export async function undoLastChange() {
+  const snapshot = await redis.get(SNAPSHOT_KEY);
   if (!snapshot) return false;
-  writeFileSync(FILE, snapshot);
-  snapshot = null;
+  await redis.set(KEY, snapshot);
+  await redis.del(SNAPSHOT_KEY);
   return true;
 }
 
-export function getFridgeContents() {
-  return load().items;
+export async function getFridgeContents() {
+  return (await load()).items;
 }
 
 function earliestDate(a, b) {
@@ -55,8 +47,8 @@ function earliestDate(a, b) {
   return a < b ? a : b;
 }
 
-export function addItems(newItems) {
-  const data = load();
+export async function addItems(newItems) {
+  const data = await load();
   for (const newItem of newItems) {
     const name = newItem.name?.trim();
     if (!name) continue;
@@ -89,20 +81,20 @@ export function addItems(newItems) {
       });
     }
   }
-  save(data);
+  await save(data);
 }
 
-export function removeItem(name) {
-  const data = load();
+export async function removeItem(name) {
+  const data = await load();
   const lower = name.toLowerCase().trim();
   const before = data.items.length;
   data.items = data.items.filter(i => !i.name.toLowerCase().includes(lower));
-  save(data);
+  await save(data);
   return data.items.length < before;
 }
 
-export function adjustItem(name, delta) {
-  const data = load();
+export async function adjustItem(name, delta) {
+  const data = await load();
   const item = data.items.find(i => i.name.toLowerCase() === name.toLowerCase().trim());
   if (!item) return { found: false };
   const newQty = item.quantity === null
@@ -110,16 +102,16 @@ export function adjustItem(name, delta) {
     : parseFloat((parseFloat(item.quantity) + delta).toFixed(3));
   if (newQty <= 0) {
     data.items = data.items.filter(i => i !== item);
-    save(data);
+    await save(data);
     return { found: true, removed: true };
   }
   item.quantity = newQty;
-  save(data);
+  await save(data);
   return { found: true, removed: false, newQuantity: item.quantity };
 }
 
-export function updateItem(name, patch) {
-  const data = load();
+export async function updateItem(name, patch) {
+  const data = await load();
   const item = data.items.find(i => i.name.toLowerCase() === name.toLowerCase().trim());
   if (!item) return { found: false };
 
@@ -127,7 +119,7 @@ export function updateItem(name, patch) {
     const newQty = parseFloat(patch.quantity);
     if (newQty <= 0) {
       data.items = data.items.filter(i => i !== item);
-      save(data);
+      await save(data);
       return { found: true, removed: true };
     }
     item.quantity = newQty;
@@ -141,17 +133,17 @@ export function updateItem(name, patch) {
   if (patch.fullQuantity !== undefined) {
     item.fullQuantity = patch.fullQuantity != null ? parseFloat(patch.fullQuantity) : null;
   }
-  save(data);
+  await save(data);
   return { found: true, removed: false, item };
 }
 
-export function removeItems(names) {
-  const data = load();
+export async function removeItems(names) {
+  const data = await load();
   const lowers = names.map(n => n.toLowerCase().trim());
   data.items = data.items.filter(i => !lowers.includes(i.name.toLowerCase()));
-  save(data);
+  await save(data);
 }
 
-export function clearFridge() {
-  save({ items: [] });
+export async function clearFridge() {
+  await save({ items: [] });
 }

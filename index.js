@@ -122,7 +122,7 @@ bot.onText(/\/training/, async (msg) => {
   } catch (e) { err(msg.chat.id, e); }
 });
 
-bot.onText(/\/kuehlschrank/, (msg) => {
+bot.onText(/\/kuehlschrank/, async (msg) => {
   if (!msg.from || !allowed(msg.from.id)) return;
   if (WEBAPP_URL) {
     bot.sendMessage(msg.chat.id, '🧊 Kühlschrank öffnen:', {
@@ -130,7 +130,7 @@ bot.onText(/\/kuehlschrank/, (msg) => {
     });
     return;
   }
-  const items = getFridgeContents();
+  const items = await getFridgeContents();
   if (items.length === 0) {
     bot.sendMessage(msg.chat.id, 'Dein Kühlschrank ist leer! 🫙 Schick mir einen Kassenbon zum Befüllen.');
     return;
@@ -156,7 +156,7 @@ bot.on('photo', async (msg) => {
     const res     = await fetch(fileUrl);
     const buffer  = Buffer.from(await res.arrayBuffer());
     const items   = await analyzeReceipt(buffer, 'image/jpeg');
-    addItems(items);
+    await addItems(items);
     bot.editMessageText(
       items.length > 0
         ? `✅ *${items.length} Produkte erkannt und eingetragen:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`
@@ -179,7 +179,7 @@ bot.on('document', async (msg) => {
     const buffer  = Buffer.from(await res.arrayBuffer());
     console.log(`[PDF] Datei geladen: ${buffer.length} Bytes, MIME: ${doc.mime_type}`);
     const items   = await analyzeReceipt(buffer, doc.mime_type);
-    addItems(items);
+    await addItems(items);
     bot.editMessageText(
       items.length > 0
         ? `✅ *${items.length} Produkte erkannt und eingetragen:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`
@@ -244,7 +244,7 @@ const KEYBOARD_SHORTCUTS = {
       });
       return;
     }
-    const items = getFridgeContents();
+    const items = await getFridgeContents();
     if (!items.length) { await bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙'); return; }
     await bot.sendMessage(chatId, `🧊 *Dein Kühlschrank:*\n\n${items.map(i => `• ${i.name}${i.quantity != null ? ` (${i.quantity}${i.unit ? ' ' + i.unit : ''})` : ''}`).join('\n')}`, { parse_mode: 'Markdown' });
   },
@@ -353,7 +353,10 @@ JSON-Format: {"intent": "...", "data": {...}}`,
 
       case 'remove_fridge': {
         const { items } = parsed.data;
-        const removed = items.filter(i => removeItem(i));
+        const removed = [];
+        for (const i of items) {
+          if (await removeItem(i)) removed.push(i);
+        }
         if (removed.length > 0) {
           bot.sendMessage(chatId, `🗑️ Raus damit! ${removed.map(i => `*${i}*`).join(', ')} ${removed.length > 1 ? 'sind' : 'ist'} nicht mehr im Kühlschrank.`, { parse_mode: 'Markdown' });
         } else {
@@ -369,7 +372,7 @@ JSON-Format: {"intent": "...", "data": {...}}`,
           });
           break;
         }
-        const contents = getFridgeContents();
+        const contents = await getFridgeContents();
         if (contents.length === 0) {
           bot.sendMessage(chatId, 'Dein Kühlschrank ist leer! 🫙');
         } else {
@@ -432,7 +435,7 @@ JSON-Format: {"intent": "...", "data": {...}}`,
 // ── KOCHVORSCHLAG ─────────────────────────────────────────────────────────────
 
 async function handleCookingSuggestion(chatId) {
-  const contents = getFridgeContents();
+  const contents = await getFridgeContents();
   if (contents.length === 0) {
     bot.sendMessage(chatId, 'Dein Kühlschrank ist leer – erst einkaufen, dann kochen! 😄');
     return;

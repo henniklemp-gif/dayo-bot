@@ -50,46 +50,46 @@ app.get('/api/fitness/status', authMiddleware, (req, res) => {
   res.json(getPlanStatus());
 });
 
-app.get('/api/fridge', authMiddleware, (req, res) => {
-  res.json(getFridgeContents());
+app.get('/api/fridge', authMiddleware, async (req, res) => {
+  res.json(await getFridgeContents());
 });
 
-app.delete('/api/fridge/:name', authMiddleware, (req, res) => {
+app.delete('/api/fridge/:name', authMiddleware, async (req, res) => {
   const name = decodeURIComponent(req.params.name);
-  const removed = removeItem(name);
+  const removed = await removeItem(name);
   res.json({ success: removed });
 });
 
-app.patch('/api/fridge/:name', authMiddleware, (req, res) => {
+app.patch('/api/fridge/:name', authMiddleware, async (req, res) => {
   const name = decodeURIComponent(req.params.name);
   const { delta, quantity, category, expiryDate, fullQuantity } = req.body ?? {};
 
   if (delta !== undefined) {
     const d = parseFloat(delta);
     if (isNaN(d)) return res.status(400).json({ error: 'delta required' });
-    return res.json(adjustItem(name, d));
+    return res.json(await adjustItem(name, d));
   }
 
-  const result = updateItem(name, { quantity, category, expiryDate, fullQuantity });
+  const result = await updateItem(name, { quantity, category, expiryDate, fullQuantity });
   res.json(result);
 });
 
-app.post('/api/fridge/undo', authMiddleware, (req, res) => {
-  const success = undoLastChange();
-  res.json({ success, items: getFridgeContents() });
+app.post('/api/fridge/undo', authMiddleware, async (req, res) => {
+  const success = await undoLastChange();
+  res.json({ success, items: await getFridgeContents() });
 });
 
-app.post('/api/fridge/add', authMiddleware, (req, res) => {
+app.post('/api/fridge/add', authMiddleware, async (req, res) => {
   const { name, quantity, unit, category } = req.body ?? {};
   if (!name?.trim()) return res.status(400).json({ error: 'name required' });
-  addItems([{ name: name.trim(), quantity: quantity ?? null, unit: unit?.trim() || null, category }]);
-  res.json({ success: true, items: getFridgeContents() });
+  await addItems([{ name: name.trim(), quantity: quantity ?? null, unit: unit?.trim() || null, category }]);
+  res.json({ success: true, items: await getFridgeContents() });
 });
 
-app.post('/api/fridge/delete-batch', authMiddleware, (req, res) => {
+app.post('/api/fridge/delete-batch', authMiddleware, async (req, res) => {
   const names = req.body?.names;
   if (!Array.isArray(names)) return res.status(400).json({ error: 'names required' });
-  removeItems(names);
+  await removeItems(names);
   res.json({ success: true });
 });
 
