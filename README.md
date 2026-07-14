@@ -16,7 +16,7 @@ Persönlicher Telegram-Alltagsbegleiter für Henrik. Node.js/Express-Bot, deploy
 | `bring.js` | Bring!-Einkaufslisten-Integration |
 | `voice.js` | Sprachnachrichten-Transkription (Whisper) |
 | `scheduler.js` | Cron: 7:30 Uhr Morgennachricht (Zitat + Termine + Training + BTC-Kurs), montags 8 Uhr Wochenübersicht |
-| `quote.js` | Tägliches inspirierendes Zitat (von Claude generiert), nur für die 7:30-Morgennachricht |
+| `quote.js` | Tägliches inspirierendes Zitat (von Claude generiert, mit Redis-Historie gegen Wiederholungen), nur für die 7:30-Morgennachricht |
 | `bitcoin.js` | Aktueller BTC-Kurs in USD (CoinGecko), nur für die 7:30-Morgennachricht |
 | `format.js` | Text-Formatierung für Bot-Nachrichten |
 | `server.js` + `public/index.html` | Telegram Mini App zur Kühlschrankverwaltung |
@@ -40,11 +40,11 @@ Die Mini App (`public/index.html`) zeigt den Kühlschrankinhalt gruppiert nach L
 ```
 - `category`: `kuehlschrank` | `tiefkuehlfach` | `speisekammer` (Pflichtfeld, Default `kuehlschrank` für Altbestände)
 - `expiryDate`: ISO-Datum (MHD), nullable, manuell gepflegt
-- `fullQuantity`: Referenzmenge für die %-Berechnung, nur bei Gewicht/Volumen-Einheiten (`g`/`kg`/`ml`/`l`) relevant, wird automatisch beim (Nach-)Hinzufügen gesetzt
+- `fullQuantity`: Referenzmenge für den Detail-Slider, wird für **alle** Einheiten automatisch beim (Nach-)Hinzufügen gesetzt (bei Bestandsdaten ohne Wert wird sie beim Laden rückwirkend nachgetragen = aktuelle Menge gilt als "voll")
 
 **Ebene 1 (Liste):** nach Kategorie gruppiert mit Sticky-Headern (🧊/❄️/🥫 inkl. Artikelzahl). Zeile zeigt Name, Info-Pill (Füllstand-% bei Gewicht/Volumen, sonst Stückzahl), optionales Ablauf-Badge (rot „Abgelaufen“, orange „in X Tagen“), Bring!-Button, Swipe-to-delete. Keine Produkt-Emojis mehr (bewusst entfernt – zu ungenau, evtl. später eigene Produkt-Datenbank).
 
-**Ebene 2 (Detail-Sheet, Tap auf Zeile):** Kategorie ändern (Pflicht-Chips), MHD setzen (Datumsfeld + Schnellauswahl-Chips +3 Tage/+1 Woche/+2 Wochen/+1 Monat), Menge anpassen – Füllstand-Slider (0–100%, farbcodiert grün→rot) bei Gewicht/Volumen-Artikeln, klassischer Stepper bei zählbaren Einheiten, Artikel löschen.
+**Ebene 2 (Detail-Sheet, Tap auf Zeile):** Kategorie ändern (Pflicht-Chips), MHD setzen (Datumsfeld + Schnellauswahl-Chips +3 Tage/+1 Woche/+2 Wochen/+1 Monat), Menge anpassen – Füllstand-Slider (farbcodiert grün→rot) für alle Artikel mit bekannter Referenzmenge: bei Gewicht/Volumen-Einheiten (`g`/`kg`/`ml`/`l`) prozentual in 5%-Schritten, bei Stückzahlen und allen anderen Einheiten (Stk, Pkg, …) direkt in 0,5er-Schritten. Der alte +/–-Stepper dient nur noch als Fallback ohne bekannte Referenzmenge. Artikel löschen.
 
 **Kategorie-Zuordnung:**
 - Kassenbon-Scan (95% der Fälle): Claude liefert `category` direkt in der Vision-Anfrage mit
@@ -59,7 +59,7 @@ Die Mini App (`public/index.html`) zeigt den Kühlschrankinhalt gruppiert nach L
 
 Die automatische 7:30-Uhr-Nachricht (`scheduler.js` → `formatMorningOverview()` in `format.js`) startet mit einem inspirierenden Zitat, gefolgt von der gewohnten Tagesübersicht (Termine + Training) und endet mit dem aktuellen Bitcoin-Kurs in USD:
 
-1. **Zitat** (`quote.js`): wird bei jedem Lauf frisch von Claude generiert (Englisch, mit Autor:in). Schlägt der Call fehl, liefert die Funktion `null` zurück – die restliche Nachricht wird trotzdem verschickt.
+1. **Zitat** (`quote.js`): wird bei jedem Lauf frisch von Claude generiert (Englisch, mit Autor:in, Model `claude-opus-4-8`). Die letzten 30 verwendeten Zitate werden in Redis (`dayo:quote_history`) gemerkt und dem Modell als Ausschlussliste mitgegeben, damit die Morgennachricht nicht mehr auf dieselben Klassiker-Zitate zurückfällt. Schlägt der Call fehl, liefert die Funktion `null` zurück – die restliche Nachricht wird trotzdem verschickt.
 2. **Termine + Training**: unverändert wie bisher (`formatDailyOverview()`).
 3. **Bitcoin-Kurs** (`bitcoin.js`): Live-Preis von CoinGecko, ebenfalls fehlertolerant (`null` bei API-Fehler → Abschnitt entfällt einfach).
 
