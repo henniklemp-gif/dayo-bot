@@ -1047,20 +1047,44 @@
       });
     }
 
+    const PIECE_STEP = 0.5;
+
     function applySliderStyle(pct) {
       const hue = Math.round(Math.max(0, Math.min(100, pct)) * 1.2);
       detailSlider.style.setProperty('--fill-pct', pct + '%');
       detailSlider.style.setProperty('--fill-color', `hsl(${hue}, 70%, 45%)`);
     }
 
+    // Zwei Slider-Modi: 'pct' für messbare Einheiten (g/kg/ml/l, relativ zur
+    // Füllmenge), 'abs' für Stückzahlen & alles andere (direkte Menge, 0,5er-Schritte).
+    function sliderMode() {
+      return isMeasurableUnit(currentItem.unit) ? 'pct' : 'abs';
+    }
+
     function updateSliderUI() {
       const zeroed = zeroedItems.has(currentItem.name);
-      const pct = zeroed ? 0 : Math.round((currentItem.quantity / currentItem.fullQuantity) * 100);
-      const abs = zeroed ? 0 : currentItem.quantity;
-      detailSlider.value = pct;
-      applySliderStyle(pct);
-      detailSliderPct.textContent = `${pct}%`;
-      detailSliderAbs.textContent = `≈ ${abs} ${currentItem.unit} von ${currentItem.fullQuantity} ${currentItem.unit}`;
+      const unit = currentItem.unit ?? '';
+      const mode = sliderMode();
+      detailSlider.dataset.mode = mode;
+
+      if (mode === 'pct') {
+        const pct = zeroed ? 0 : Math.round((currentItem.quantity / currentItem.fullQuantity) * 100);
+        const abs = zeroed ? 0 : currentItem.quantity;
+        detailSlider.min = 0; detailSlider.max = 100; detailSlider.step = 5;
+        detailSlider.value = pct;
+        applySliderStyle(pct);
+        detailSliderPct.textContent = `${pct}%`;
+        detailSliderAbs.textContent = `≈ ${abs} ${unit} von ${currentItem.fullQuantity} ${unit}`;
+      } else {
+        const full = currentItem.fullQuantity;
+        const qty = zeroed ? 0 : currentItem.quantity;
+        const pct = full ? Math.round((qty / full) * 100) : 0;
+        detailSlider.min = 0; detailSlider.max = full; detailSlider.step = PIECE_STEP;
+        detailSlider.value = qty;
+        applySliderStyle(pct);
+        detailSliderPct.textContent = `${qty}${unit ? ' ' + unit : ''}`;
+        detailSliderAbs.textContent = `von ${full}${unit ? ' ' + unit : ''}`;
+      }
     }
 
     function updateStepperUI() {
@@ -1084,10 +1108,10 @@
         return;
       }
       detailAmountField.style.display = '';
-      const measurable = isMeasurableUnit(currentItem.unit) && currentItem.fullQuantity;
-      detailSliderBlock.style.display  = measurable ? '' : 'none';
-      detailStepperBlock.style.display = measurable ? 'none' : '';
-      if (measurable) updateSliderUI(); else updateStepperUI();
+      const hasSlider = currentItem.fullQuantity != null;
+      detailSliderBlock.style.display  = hasSlider ? '' : 'none';
+      detailStepperBlock.style.display = hasSlider ? 'none' : '';
+      if (hasSlider) updateSliderUI(); else updateStepperUI();
     }
 
     function openDetail(name) {
@@ -1151,25 +1175,48 @@
 
     // Füllstand-Slider
     detailSlider.addEventListener('input', () => {
-      const pct = parseInt(detailSlider.value, 10);
-      applySliderStyle(pct);
-      const abs = Math.round(currentItem.fullQuantity * pct / 100 * 100) / 100;
-      detailSliderPct.textContent = `${pct}%`;
-      detailSliderAbs.textContent = `≈ ${abs} ${currentItem.unit} von ${currentItem.fullQuantity} ${currentItem.unit}`;
+      const unit = currentItem.unit ?? '';
+      if (detailSlider.dataset.mode === 'pct') {
+        const pct = parseInt(detailSlider.value, 10);
+        applySliderStyle(pct);
+        const abs = Math.round(currentItem.fullQuantity * pct / 100 * 100) / 100;
+        detailSliderPct.textContent = `${pct}%`;
+        detailSliderAbs.textContent = `≈ ${abs} ${unit} von ${currentItem.fullQuantity} ${unit}`;
+      } else {
+        const qty = parseFloat(detailSlider.value);
+        const full = currentItem.fullQuantity;
+        const pct = full ? Math.round(qty / full * 100) : 0;
+        applySliderStyle(pct);
+        detailSliderPct.textContent = `${qty}${unit ? ' ' + unit : ''}`;
+        detailSliderAbs.textContent = `von ${full}${unit ? ' ' + unit : ''}`;
+      }
     });
 
     detailSlider.addEventListener('change', () => {
       if (!currentItem) return;
-      const pct = parseInt(detailSlider.value, 10);
-      if (pct <= 0) {
-        zeroedItems.add(currentItem.name);
-        updateSliderUI();
-        tg.HapticFeedback?.notificationOccurred('warning');
-        applyFilter(document.getElementById('search').value);
-        return;
+      const mode = detailSlider.dataset.mode;
+      let qty;
+      if (mode === 'pct') {
+        const pct = parseInt(detailSlider.value, 10);
+        if (pct <= 0) {
+          zeroedItems.add(currentItem.name);
+          updateSliderUI();
+          tg.HapticFeedback?.notificationOccurred('warning');
+          applyFilter(document.getElementById('search').value);
+          return;
+        }
+        qty = Math.round(currentItem.fullQuantity * pct / 100 * 100) / 100;
+      } else {
+        qty = parseFloat(detailSlider.value);
+        if (qty <= 0) {
+          zeroedItems.add(currentItem.name);
+          updateSliderUI();
+          tg.HapticFeedback?.notificationOccurred('warning');
+          applyFilter(document.getElementById('search').value);
+          return;
+        }
       }
       zeroedItems.delete(currentItem.name);
-      const qty = Math.round(currentItem.fullQuantity * pct / 100 * 100) / 100;
       currentItem.quantity = qty;
       updateSliderUI();
       tg.HapticFeedback?.notificationOccurred('success');

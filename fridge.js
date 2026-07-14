@@ -5,11 +5,6 @@ const KEY = 'kuehlschrank';
 const SNAPSHOT_KEY = 'kuehlschrank:snapshot';
 
 const CATEGORIES = ['kuehlschrank', 'tiefkuehlfach', 'speisekammer'];
-const MEASURABLE_UNITS = ['g', 'kg', 'ml', 'l'];
-
-function isMeasurableUnit(unit) {
-  return !!unit && MEASURABLE_UNITS.includes(unit.toLowerCase());
-}
 
 async function load() {
   const data = (await redis.get(KEY)) || { items: [] };
@@ -17,7 +12,7 @@ async function load() {
     ...i,
     category: CATEGORIES.includes(i.category) ? i.category : 'kuehlschrank',
     expiryDate: i.expiryDate ?? null,
-    fullQuantity: i.fullQuantity ?? null,
+    fullQuantity: i.fullQuantity ?? (i.quantity != null ? i.quantity : null),
   }));
   return data;
 }
@@ -63,7 +58,7 @@ export async function addItems(newItems) {
         existing.quantity = newItem.quantity ?? existing.quantity;
         existing.unit = newItem.unit ?? existing.unit;
       }
-      if (isMeasurableUnit(existing.unit) && existing.quantity != null) {
+      if (existing.quantity != null) {
         existing.fullQuantity = existing.quantity;
       }
       existing.expiryDate = earliestDate(existing.expiryDate, newItem.expiryDate ?? null);
@@ -77,7 +72,7 @@ export async function addItems(newItems) {
         unit,
         category: category ?? 'kuehlschrank',
         expiryDate: newItem.expiryDate ?? null,
-        fullQuantity: isMeasurableUnit(unit) && quantity != null ? quantity : null,
+        fullQuantity: quantity,
       });
     }
   }
