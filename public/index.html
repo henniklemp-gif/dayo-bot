@@ -8,310 +8,356 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg-app: oklch(0.17 0.02 55);
+      --bg-header: oklch(0.12 0.015 55);
+      --bg-card: oklch(0.23 0.02 55);
+      --bg-pill: oklch(0.28 0.02 55);
+      --accent-bg: oklch(0.72 0.15 45);
+      --accent-fg: oklch(0.15 0.01 45);
+      --avatar-bg: oklch(0.4 0.1 45);
+      --text-primary: oklch(0.96 0.01 60);
+      --text-dim: oklch(0.6 0.02 60);
+      --text-mid: oklch(0.82 0.01 60);
+      --text-soft: oklch(0.85 0.01 60);
+      --handle: oklch(0.35 0.02 55);
+
+      --red-bg: oklch(0.3 0.09 25);
+      --red-fg: oklch(0.8 0.16 25);
+      --red-dot: oklch(0.65 0.2 25);
+      --green-bg: oklch(0.3 0.1 150);
+      --green-fg: oklch(0.85 0.15 150);
+      --green-dot: oklch(0.72 0.16 145);
+      --yellow-bg: oklch(0.3 0.08 75);
+      --yellow-fg: oklch(0.82 0.15 78);
+      --yellow-dot: oklch(0.8 0.16 90);
+
+      --bring-off-bg: oklch(0.27 0.06 45);
+      --bring-off-fg: oklch(0.8 0.13 45);
+    }
+
+    html, body {
+      height: 100%;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--tg-theme-bg-color, #fff);
-      color: var(--tg-theme-text-color, #000);
+      background: var(--bg-app);
+      color: var(--text-primary);
       min-height: 100vh;
-      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      display: flex;
+      flex-direction: column;
       overscroll-behavior: none;
     }
 
-    /* ── Sticky top ──────────────────────────────────────────────────────────── */
+    /* ── Topbar ──────────────────────────────────────────────────────────────── */
 
-    .sticky-top {
-      position: sticky;
-      top: 0;
-      background: var(--tg-theme-bg-color, #fff);
-      z-index: 20;
-      padding-bottom: 8px;
-      border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #ccc) 25%, transparent);
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px 8px;
-    }
-
-    .header-title {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      flex-shrink: 0;
-    }
-
-    .header-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border: none;
-      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
-      font-size: 20px;
-      cursor: pointer;
-      padding: 0;
-      border-radius: 50%;
-      color: var(--tg-theme-link-color, #2481cc);
-      transition: opacity 0.2s;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .header-btn img, .header-btn svg { display: block; }
-    .header-btn:active { transform: scale(0.88); }
-    .header-btn.open { transform: rotate(45deg); }
-
-    .undo-btn { opacity: 0.25; }
-    .undo-btn:not(:disabled) { opacity: 1; }
-
-    #search-wrap { padding: 0 12px; }
-
-    #search {
-      width: 100%;
-      padding: 9px 14px;
-      border: none;
-      border-radius: 12px;
-      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
-      color: var(--tg-theme-text-color, #000);
-      font-size: 15px;
-      outline: none;
-      -webkit-appearance: none;
-    }
-    #search::placeholder { color: var(--tg-theme-hint-color, #8e8e93); }
-
-    /* ── Skeleton ────────────────────────────────────────────────────────────── */
-
-    .skeleton-item {
+    .topbar {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 13px 16px;
-      border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #ccc) 18%, transparent);
+      padding: 10px 14px;
+      background: var(--bg-header);
+      flex-shrink: 0;
     }
 
+    #close-btn {
+      border: none;
+      background: none;
+      color: var(--text-dim);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--avatar-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--text-primary);
+      flex-shrink: 0;
+    }
+
+    .app-name {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .topbar-spacer { flex: 1; }
+
+    .menu-wrap { position: relative; }
+
+    #menu-btn {
+      border: none;
+      background: none;
+      color: var(--text-dim);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 6px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .menu-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 4px;
+      min-width: 160px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      z-index: 30;
+    }
+    .menu-dropdown.open { display: block; }
+
+    .menu-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .menu-item:disabled { color: var(--text-dim); opacity: 0.5; cursor: default; }
+    .menu-item:not(:disabled):active { background: var(--bg-pill); }
+
+    /* ── Titelzeile ──────────────────────────────────────────────────────────── */
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      flex-shrink: 0;
+    }
+
+    .page-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .round-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.1s;
+    }
+    .round-btn:active { transform: scale(0.88); }
+    .round-btn.neutral { background: var(--bg-card); color: var(--text-mid); font-size: 15px; }
+    .round-btn.neutral img { display: block; filter: invert(1) brightness(1.4); }
+    .round-btn.accent { background: var(--accent-bg); color: var(--accent-fg); font-size: 18px; font-weight: 700; }
+
+    /* ── Suche ───────────────────────────────────────────────────────────────── */
+
+    #search-wrap { padding: 0 16px 12px; flex-shrink: 0; }
+
+    #search {
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    #search::placeholder { color: var(--text-dim); }
+
+    /* ── Filter-Chips ────────────────────────────────────────────────────────── */
+
+    .filter-chips {
+      display: flex;
+      gap: 6px;
+      padding: 0 16px 12px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .filter-chips::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      padding: 7px 13px;
+      border-radius: 20px;
+      border: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--bg-card);
+      color: var(--text-mid);
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .filter-chip.active {
+      background: var(--accent-bg);
+      color: var(--accent-fg);
+    }
+
+    /* ── Karten-Grid ─────────────────────────────────────────────────────────── */
+
+    #items-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 12px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 14px;
+      padding: 9px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      position: relative;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .card.zeroed { opacity: 0.55; }
+    .card.zeroed .card-name { text-decoration: line-through; }
+
+    .card-dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      padding-right: 14px;
+    }
+
+    .card-icon { font-size: 18px; flex-shrink: 0; line-height: 1; }
+
+    .card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .card-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: var(--bg-pill);
+      color: var(--text-soft);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .card-bring {
+      width: 25px;
+      height: 25px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      flex-shrink: 0;
+      background: var(--bring-off-bg);
+      color: var(--bring-off-fg);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .card-bring.done { background: var(--green-bg); color: var(--green-fg); }
+
+    @keyframes bringPulse {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    .card-bring.pulse { animation: bringPulse 0.55s ease-in-out 3; }
+
+    /* ── Empty ───────────────────────────────────────────────────────────────── */
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--text-dim);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+
+    /* ── Skeleton ────────────────────────────────────────────────────────────── */
+
+    .skeleton-card {
+      background: var(--bg-card);
+      border-radius: 14px;
+      padding: 9px 10px;
+      height: 62px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
     .skel {
-      background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-      background: linear-gradient(
-        90deg,
-        var(--tg-theme-secondary-bg-color, #f0f0f0) 25%,
-        color-mix(in srgb, var(--tg-theme-secondary-bg-color, #f0f0f0) 55%, var(--tg-theme-bg-color, #fff)) 50%,
-        var(--tg-theme-secondary-bg-color, #f0f0f0) 75%
-      );
+      background: var(--bg-pill);
+      background: linear-gradient(90deg, var(--bg-pill) 25%, oklch(0.3 0.02 55) 50%, var(--bg-pill) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.4s infinite linear;
       border-radius: 6px;
     }
-
     @keyframes shimmer {
       0%   { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
-
-    .skel-text  { height: 16px; flex: 1; }
-    .skel-btn   { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; }
-
-    /* ── Kategorie-Gruppen ───────────────────────────────────────────────────── */
-
-    .category-header {
-      position: sticky;
-      top: var(--sticky-offset, 76px);
-      z-index: 10;
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--tg-theme-hint-color, #666);
-      background: var(--tg-theme-bg-color, #fff);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #ccc) 15%, transparent);
-    }
-
-    .category-count { font-weight: 400; opacity: 0.7; }
-
-    .group-empty {
-      padding: 10px 16px;
-      font-size: 13px;
-      font-style: italic;
-      color: var(--tg-theme-hint-color, #999);
-    }
-
-    /* ── Items ───────────────────────────────────────────────────────────────── */
-
-    .item-wrap {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .swipe-bg {
-      position: absolute;
-      inset: 0 0 0 auto;
-      width: 72px;
-      background: #ff3b30;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      color: #fff;
-    }
-
-    .item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px;
-      border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #ccc) 18%, transparent);
-      background: var(--tg-theme-bg-color, #fff);
-      will-change: transform;
-      touch-action: pan-y;
-      transition: opacity 0.2s;
-      cursor: pointer;
-    }
-
-    .item.swiping { transition: none; }
-
-    .item.removing {
-      opacity: 0;
-      transform: translateX(100%);
-      transition: transform 0.22s ease, opacity 0.22s;
-    }
-
-    .item.zeroed { opacity: 0.55; }
-    .item.zeroed .item-name { text-decoration: line-through; }
-
-    .item-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .item-name {
-      font-size: 15px;
-      font-weight: 500;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    /* ── Pills & Badges ──────────────────────────────────────────────────────── */
-
-    .info-pill {
-      padding: 4px 10px;
-      border-radius: 20px;
-      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
-      color: var(--tg-theme-text-color, #000);
-      font-size: 12px;
-      font-weight: 600;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-
-    .expiry-badge {
-      padding: 3px 8px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .expiry-badge.soon    { background: color-mix(in srgb, #ff9500 15%, transparent); color: #ff9500; }
-    .expiry-badge.expired { background: color-mix(in srgb, #ff3b30 15%, transparent); color: #ff3b30; }
-
-    /* ── Buttons ─────────────────────────────────────────────────────────────── */
-
-    .btn {
-      border: none;
-      border-radius: 9px;
-      cursor: pointer;
-      font-size: 17px;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      background: transparent;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      transition: transform 0.1s;
-    }
-    .btn:active { transform: scale(0.84); }
-
-    .bring-btn {
-      color: var(--tg-theme-button-color, #2481cc);
-      background: color-mix(in srgb, var(--tg-theme-button-color, #2481cc) 12%, transparent);
-    }
-    .bring-btn.done {
-      background: color-mix(in srgb, #34c759 18%, transparent);
-      color: #34c759;
-    }
-
-    @keyframes bringPulse {
-      0%   { transform: scale(1);    background: color-mix(in srgb, var(--tg-theme-button-color, #2481cc) 12%, transparent); }
-      40%  { transform: scale(1.25); background: color-mix(in srgb, #34c759 45%, transparent); color: #34c759; }
-      100% { transform: scale(1);    background: color-mix(in srgb, var(--tg-theme-button-color, #2481cc) 12%, transparent); }
-    }
-
-    .bring-btn.pulse {
-      animation: bringPulse 0.55s ease-in-out 3;
-    }
-
-    .remove-btn {
-      background: color-mix(in srgb, #ff3b30 12%, transparent);
-      color: #ff3b30;
-    }
-
-    .qty-control {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      flex-shrink: 0;
-    }
-
-    .qty-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      font-size: 20px;
-      font-weight: 300;
-      line-height: 1;
-    }
-
-    .minus-btn {
-      background: color-mix(in srgb, #ff3b30 12%, transparent);
-      color: #ff3b30;
-    }
-    .plus-btn {
-      background: color-mix(in srgb, #34c759 12%, transparent);
-      color: #34c759;
-    }
-    .qty-btn.pressing {
-      filter: brightness(0.85);
-    }
-
-    .qty-display {
-      min-width: 44px;
-      text-align: center;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--tg-theme-text-color, #000);
-    }
-
-    /* ── Empty / Error ───────────────────────────────────────────────────────── */
-
-    .empty-state {
-      text-align: center;
-      padding: 64px 24px;
-      color: var(--tg-theme-hint-color, #888);
-    }
-    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state p { font-size: 15px; }
+    .skel-line { height: 12px; width: 70%; }
+    .skel-pill { height: 16px; width: 40%; border-radius: 20px; }
 
     /* ── Barcode-Scanner ─────────────────────────────────────────────────────── */
 
@@ -338,7 +384,7 @@
       max-width: 320px;
       aspect-ratio: 16 / 9;
       border: 3px solid #fff;
-      border-radius: 12px;
+      border-radius: 14px;
       box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.45);
       pointer-events: none;
     }
@@ -347,13 +393,13 @@
       position: absolute;
       top: calc(env(safe-area-inset-top, 0px) + 16px);
       right: 16px;
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: none;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(255, 255, 255, 0.15);
       color: #fff;
-      font-size: 18px;
+      font-size: 16px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
@@ -364,8 +410,8 @@
       left: 0; right: 0;
       text-align: center;
       color: #fff;
-      font-size: 14px;
-      opacity: 0.85;
+      font-size: 13px;
+      opacity: 0.8;
     }
 
     /* ── Bottom Sheets (Add & Detail) ────────────────────────────────────────── */
@@ -374,7 +420,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.35);
+      background: rgba(0,0,0,0.4);
       z-index: 40;
     }
     .sheet-backdrop.visible { display: block; }
@@ -382,13 +428,13 @@
     .bottom-sheet {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      background: var(--tg-theme-bg-color, #fff);
+      background: var(--bg-app);
       border-radius: 20px 20px 0 0;
       padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
       z-index: 41;
       transform: translateY(100%);
       transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-      max-height: 85vh;
+      max-height: 80%;
       overflow-y: auto;
     }
     .bottom-sheet.open { transform: translateY(0); }
@@ -397,13 +443,14 @@
       width: 36px;
       height: 4px;
       border-radius: 2px;
-      background: var(--tg-theme-hint-color, #ccc);
-      margin: 10px auto 18px;
+      background: var(--handle);
+      margin: 10px auto 16px;
     }
 
     .sheet-title {
       font-size: 17px;
       font-weight: 700;
+      color: var(--text-primary);
       margin-bottom: 16px;
     }
 
@@ -411,43 +458,53 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
+      margin-bottom: 16px;
     }
     .detail-header .sheet-title {
-      margin-bottom: 16px;
+      margin-bottom: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .detail-delete-btn {
-      background: color-mix(in srgb, #ff3b30 12%, transparent);
-      color: #ff3b30;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      border: none;
+      background: var(--red-bg);
+      color: var(--red-fg);
+      font-size: 15px;
+      cursor: pointer;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .sheet-field {
-      margin-bottom: 12px;
-    }
+    .sheet-field { margin-bottom: 16px; }
 
-    .sheet-field label {
+    .sheet-label {
       display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--tg-theme-hint-color, #888);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
-    .sheet-field input {
+    .sheet-field input[type="text"],
+    .sheet-field input[type="number"],
+    .sheet-field input[type="date"] {
       width: 100%;
       padding: 11px 14px;
       border: none;
       border-radius: 12px;
-      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
-      color: var(--tg-theme-text-color, #000);
-      font-size: 16px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 15px;
       outline: none;
       -webkit-appearance: none;
+      color-scheme: dark;
     }
 
     .qty-row {
@@ -456,7 +513,7 @@
       gap: 10px;
     }
 
-    .unit-chips {
+    .chip-row {
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
@@ -464,31 +521,32 @@
     }
 
     .chip {
-      padding: 5px 12px;
+      padding: 7px 13px;
       border-radius: 20px;
       border: none;
-      background: var(--tg-theme-secondary-bg-color, #f2f2f7);
-      color: var(--tg-theme-text-color, #000);
+      background: var(--bg-card);
+      color: var(--text-mid);
       font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
       -webkit-tap-highlight-color: transparent;
       transition: background 0.15s, color 0.15s;
     }
-    .chip.active {
-      background: var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-text-color, #fff);
-    }
+    .chip.active { background: var(--accent-bg); color: var(--accent-fg); }
+    .chip.small { padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--text-soft); }
 
     #add-btn {
       width: 100%;
-      margin-top: 18px;
+      margin-top: 4px;
       padding: 14px;
       border: none;
       border-radius: 14px;
-      background: var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-text-color, #fff);
-      font-size: 16px;
-      font-weight: 600;
+      background: var(--accent-bg);
+      color: var(--accent-fg);
+      font-size: 15px;
+      font-weight: 700;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       transition: opacity 0.15s;
@@ -496,79 +554,82 @@
     #add-btn:disabled { opacity: 0.45; }
     #add-btn:not(:disabled):active { opacity: 0.8; }
 
-    /* ── Füllstand-Slider ────────────────────────────────────────────────────── */
+    /* ── Menge: Stepper + Slider ─────────────────────────────────────────────── */
+
+    .qty-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 2px 0 8px;
+    }
+
+    .qty-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      font-size: 20px;
+      font-weight: 300;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .qty-btn.pressing { filter: brightness(0.85); }
+    .minus-btn { background: var(--red-bg); color: var(--red-fg); }
+    .plus-btn { background: var(--green-bg); color: var(--green-fg); }
+
+    .qty-display {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+      min-width: 64px;
+      text-align: center;
+      flex-shrink: 0;
+    }
 
     .detail-slider {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: linear-gradient(
-        to right,
-        var(--fill-color, #34c759) 0%,
-        var(--fill-color, #34c759) var(--fill-pct, 100%),
-        var(--tg-theme-secondary-bg-color, #e5e5ea) var(--fill-pct, 100%),
-        var(--tg-theme-secondary-bg-color, #e5e5ea) 100%
-      );
-      outline: none;
-      margin: 14px 0 6px;
-    }
-    .detail-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #fff;
-      border: 3px solid var(--fill-color, #34c759);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
-      cursor: pointer;
-    }
-    .detail-slider::-moz-range-track {
-      height: 6px;
-      border-radius: 3px;
+      height: 20px;
       background: transparent;
-    }
-    .detail-slider::-moz-range-progress {
-      height: 6px;
-      border-radius: 3px;
-      background: var(--fill-color, #34c759);
-    }
-    .detail-slider::-moz-range-thumb {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #fff;
-      border: 3px solid var(--fill-color, #34c759);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      accent-color: var(--accent-bg);
       cursor: pointer;
+      margin: 2px 0 4px;
     }
-
-    .slider-readout {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-    .slider-readout .pct { font-size: 20px; font-weight: 700; }
-    .slider-readout .abs { font-size: 13px; color: var(--tg-theme-hint-color, #888); }
   </style>
 </head>
 <body>
-  <div class="sticky-top">
-    <header>
-      <span class="header-title">🧊 Kühlschrank</span>
-      <div class="header-actions">
-        <button id="scan-btn" class="header-btn" title="Barcode scannen"><img src="Emojis/E1D9.svg" alt="Barcode scannen" width="20" height="20"></button>
-        <button id="fab" class="header-btn" title="Hinzufügen"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3V17M3 10H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
-        <button id="undo-btn" class="header-btn undo-btn" disabled title="Rückgängig">↩</button>
+  <div class="topbar">
+    <button id="close-btn" title="Schließen">✕</button>
+    <div class="avatar">D</div>
+    <span class="app-name">Dayo</span>
+    <span class="topbar-spacer"></span>
+    <div class="menu-wrap">
+      <button id="menu-btn" title="Mehr">•••</button>
+      <div id="menu-dropdown" class="menu-dropdown">
+        <button id="undo-btn" class="menu-item" disabled>↩ Rückgängig</button>
       </div>
-    </header>
-    <div id="search-wrap">
-      <input id="search" type="search" placeholder="🔍 Suchen…" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
   </div>
 
-  <div id="items-list"></div>
+  <div class="title-row">
+    <span class="page-title">🧊 Kühlschrank</span>
+    <div class="title-actions">
+      <button id="scan-btn" class="round-btn neutral" title="Barcode scannen"><img src="Emojis/E1D9.svg" alt="Barcode scannen" width="16" height="16"></button>
+      <button id="fab" class="round-btn accent" title="Hinzufügen">+</button>
+    </div>
+  </div>
+
+  <div id="search-wrap">
+    <input id="search" type="search" placeholder="🔍 Suchen…" autocomplete="off" autocorrect="off" spellcheck="false">
+  </div>
+
+  <div id="filter-chips" class="filter-chips"></div>
+
+  <div id="items-grid"></div>
 
   <!-- Add-Sheet -->
   <div id="sheet-overlay" class="sheet-backdrop"></div>
@@ -577,33 +638,31 @@
     <div class="sheet-title">Artikel hinzufügen</div>
 
     <div class="sheet-field">
-      <label>Name</label>
+      <label class="sheet-label">Name</label>
       <input id="inp-name" type="text" placeholder="z.B. Original Stracke Salami" autocomplete="off">
     </div>
 
-    <div class="qty-row">
-      <div class="sheet-field">
-        <label>Menge (optional)</label>
+    <div class="qty-row sheet-field">
+      <div>
+        <label class="sheet-label">Menge</label>
         <input id="inp-qty" type="number" placeholder="z.B. 3" min="0" step="any">
       </div>
-      <div class="sheet-field">
-        <label>Einheit</label>
-        <input id="inp-unit" type="text" placeholder="Stk, g, ml …" autocomplete="off">
+      <div>
+        <label class="sheet-label">Einheit</label>
+        <div class="chip-row" id="add-unit-chips" style="margin-top: 0;">
+          <button class="chip" data-unit="Stk">Stk</button>
+          <button class="chip" data-unit="g">g</button>
+          <button class="chip" data-unit="kg">kg</button>
+          <button class="chip" data-unit="ml">ml</button>
+          <button class="chip" data-unit="l">l</button>
+          <button class="chip" data-unit="Pkg">Pkg</button>
+        </div>
       </div>
     </div>
 
-    <div class="unit-chips" id="add-unit-chips">
-      <button class="chip" data-unit="Stk">Stk</button>
-      <button class="chip" data-unit="g">g</button>
-      <button class="chip" data-unit="kg">kg</button>
-      <button class="chip" data-unit="ml">ml</button>
-      <button class="chip" data-unit="l">l</button>
-      <button class="chip" data-unit="Pkg">Pkg</button>
-    </div>
-
-    <div class="sheet-field" style="margin-top: 16px;">
-      <label>Kategorie</label>
-      <div class="unit-chips" id="add-category-chips">
+    <div class="sheet-field">
+      <label class="sheet-label">Kategorie</label>
+      <div class="chip-row" id="add-category-chips" style="margin-top: 0;">
         <button class="chip" data-category="kuehlschrank">🧊 Kühlschrank</button>
         <button class="chip" data-category="tiefkuehlfach">❄️ Tiefkühlfach</button>
         <button class="chip" data-category="speisekammer">🥫 Speisekammer</button>
@@ -619,12 +678,12 @@
     <div class="sheet-handle"></div>
     <div class="detail-header">
       <div class="sheet-title" id="detail-name"></div>
-      <button id="detail-delete-btn" class="btn detail-delete-btn" title="Artikel löschen">🗑️</button>
+      <button id="detail-delete-btn" class="detail-delete-btn" title="Artikel löschen">🗑️</button>
     </div>
 
     <div class="sheet-field">
-      <label>Kategorie</label>
-      <div class="unit-chips" id="detail-category-chips">
+      <label class="sheet-label">Kategorie</label>
+      <div class="chip-row" id="detail-category-chips" style="margin-top: 0;">
         <button class="chip" data-category="kuehlschrank">🧊 Kühlschrank</button>
         <button class="chip" data-category="tiefkuehlfach">❄️ Tiefkühlfach</button>
         <button class="chip" data-category="speisekammer">🥫 Speisekammer</button>
@@ -632,31 +691,25 @@
     </div>
 
     <div class="sheet-field">
-      <label>Mindesthaltbarkeit</label>
+      <label class="sheet-label">Mindesthaltbarkeit</label>
       <input id="detail-expiry" type="date">
-      <div class="unit-chips" id="detail-expiry-chips">
-        <button class="chip" data-days="3">+3 Tage</button>
-        <button class="chip" data-days="7">+1 Woche</button>
-        <button class="chip" data-days="14">+2 Wochen</button>
-        <button class="chip" data-days="30">+1 Monat</button>
-        <button class="chip" id="detail-expiry-clear">Entfernen</button>
+      <div class="chip-row" id="detail-expiry-chips">
+        <button class="chip small" data-days="3">+3 Tage</button>
+        <button class="chip small" data-days="7">+1 Woche</button>
+        <button class="chip small" data-days="14">+2 Wochen</button>
+        <button class="chip small" data-days="30">+1 Monat</button>
+        <button class="chip small" id="detail-expiry-clear">Entfernen</button>
       </div>
     </div>
 
     <div class="sheet-field" id="detail-amount-field">
-      <label>Menge</label>
-      <div id="detail-slider-block">
-        <input id="detail-slider" class="detail-slider" type="range" min="0" max="100" step="5">
-        <div class="slider-readout">
-          <span class="pct" id="detail-slider-pct"></span>
-          <span class="abs" id="detail-slider-abs"></span>
-        </div>
+      <label class="sheet-label">Menge</label>
+      <div class="qty-stepper">
+        <button class="qty-btn minus-btn" id="detail-minus-btn">−</button>
+        <span class="qty-display" id="detail-qty-display"></span>
+        <button class="qty-btn plus-btn" id="detail-plus-btn">+</button>
       </div>
-      <div id="detail-stepper-block" class="qty-control">
-        <button class="btn qty-btn minus-btn" id="detail-minus-btn">−</button>
-        <span class="qty-display" id="detail-stepper-display"></span>
-        <button class="btn qty-btn plus-btn" id="detail-plus-btn">+</button>
-      </div>
+      <input id="detail-slider" class="detail-slider" type="range" min="0" max="100" step="1">
     </div>
   </div>
 
@@ -678,8 +731,11 @@
 
     // Items zeroed in this session – deleted on pagehide
     const zeroedItems = new Set();
+    // Artikel, die in dieser Session auf die Bring!-Liste gesetzt wurden
+    const bringDone = new Set();
     let allItems = [];
     let currentItem = null; // aktuell im Detail-Sheet geöffneter Artikel
+    const activeFilters = new Set(); // aktive Kategorie-Filter-Chips (leer = alle)
 
     // ── KATEGORIEN ────────────────────────────────────────────────────────────
 
@@ -695,6 +751,10 @@
       return !!unit && MEASURABLE_UNITS.includes(unit.toLowerCase());
     }
 
+    function isPercentItem(item) {
+      return item.quantity != null && isMeasurableUnit(item.unit) && item.fullQuantity != null;
+    }
+
     function guessCategory(name) {
       const n = name.toLowerCase();
 
@@ -707,13 +767,37 @@
       return 'kuehlschrank';
     }
 
+    // Produktspezifisches Emoji, sonst Kategorie-Icon als Fallback
+    const ICON_RULES = [
+      [/tomate/, '🍅'], [/wassermelone/, '🍉'], [/banane/, '🍌'], [/gurke/, '🥒'],
+      [/fischstäbchen|fisch|lachs|thunfisch|forelle|hering/, '🐟'], [/erbsen/, '🫛'],
+      [/reis/, '🍚'], [/linsen/, '🫘'], [/hähnchen|hühnchen|brustfilet/, '🍗'],
+      [/hack|schnitzel/, '🥩'], [/ingwer/, '🫚'], [/tofu/, '🥡'],
+      [/milch|milk/, '🥛'], [/käse|cheese/, '🧀'], [/butter/, '🧈'],
+      [/joghurt|yogurt|quark/, '🥣'], [/\bei\b|eier/, '🥚'],
+      [/salami|wurst|schinken/, '🥓'], [/karotte|möhre/, '🥕'], [/paprika/, '🫑'],
+      [/salat|rucola|spinat/, '🥬'], [/brokkoli/, '🥦'], [/champignon|pilz/, '🍄'],
+      [/apfel/, '🍎'], [/orange|mandarine/, '🍊'], [/zitrone/, '🍋'],
+      [/erdbeere/, '🍓'], [/traube/, '🍇'], [/heidelbeere|blaubeere/, '🫐'],
+      [/avocado/, '🥑'], [/zwiebel/, '🧅'], [/knoblauch/, '🧄'], [/kartoffel/, '🥔'],
+      [/mais/, '🌽'], [/honig/, '🍯'], [/saft|juice/, '🧃'], [/bier/, '🍺'],
+      [/wein/, '🍷'], [/brot|brötchen|toast/, '🍞'], [/schokolade|schoko/, '🍫'],
+      [/pizza/, '🍕'], [/nudel|pasta/, '🍝'], [/kaffee/, '☕'], [/\btee\b/, '🍵'],
+    ];
+
+    function iconFor(name, category) {
+      const n = name.toLowerCase();
+      for (const [re, icon] of ICON_RULES) if (re.test(n)) return icon;
+      return (CATEGORY_META[category] && CATEGORY_META[category].icon) || '🧊';
+    }
+
     // ── SKELETON ──────────────────────────────────────────────────────────────
 
     function renderSkeleton() {
-      document.getElementById('items-list').innerHTML = Array(6).fill('').map(() => `
-        <div class="skeleton-item">
-          <div class="skel skel-text"></div>
-          <div class="skel skel-btn"></div>
+      document.getElementById('items-grid').innerHTML = Array(6).fill('').map(() => `
+        <div class="skeleton-card">
+          <div class="skel skel-line"></div>
+          <div class="skel skel-pill"></div>
         </div>`).join('');
     }
 
@@ -725,146 +809,87 @@
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function updateStickyOffset() {
-      const el = document.querySelector('.sticky-top');
-      if (el) document.documentElement.style.setProperty('--sticky-offset', el.offsetHeight + 'px');
+    function pillFor(item) {
+      if (item.quantity == null) return '';
+      const qty = item.quantity;
+      const unit = item.unit ?? '';
+      if (isPercentItem(item)) {
+        return Math.round((qty / item.fullQuantity) * 100) + '%';
+      }
+      if (unit === 'Stk') return `${qty} Stück`;
+      if (unit) return `${qty} ${unit}`;
+      return String(qty);
+    }
+
+    function daysUntil(expiryDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const exp = new Date(expiryDate + 'T00:00:00');
+      return Math.round((exp - today) / 86400000);
+    }
+
+    function dotFor(expiryDate) {
+      if (!expiryDate) return null;
+      const diff = daysUntil(expiryDate);
+      if (diff <= 1) return 'var(--red-dot)';
+      if (diff <= 5) return 'var(--yellow-dot)';
+      return 'var(--green-dot)';
+    }
+
+    function renderCard(item) {
+      const zeroed = zeroedItems.has(item.name);
+      const done = bringDone.has(item.name);
+      const dot = dotFor(item.expiryDate);
+      const pillText = zeroed ? pillFor({ ...item, quantity: 0 }) : pillFor(item);
+
+      return `
+        <div class="card${zeroed ? ' zeroed' : ''}" data-name="${escHtml(item.name)}">
+          ${dot ? `<span class="card-dot" style="background:${dot};"></span>` : ''}
+          <div class="card-head">
+            <span class="card-icon">${iconFor(item.name, item.category)}</span>
+            <span class="card-name">${escHtml(item.name)}</span>
+          </div>
+          <div class="card-foot">
+            <span class="card-pill">${pillText}</span>
+            <button class="card-bring${done ? ' done' : ''}${zeroed ? ' pulse' : ''}" data-action="bring">${done ? '✓' : '🛒'}</button>
+          </div>
+        </div>`;
+    }
+
+    function renderChips() {
+      document.getElementById('filter-chips').innerHTML = CATEGORY_ORDER.map(cat => {
+        const meta = CATEGORY_META[cat];
+        const active = activeFilters.has(cat);
+        return `<button class="filter-chip${active ? ' active' : ''}" data-category="${cat}">${meta.icon} ${meta.label}</button>`;
+      }).join('');
     }
 
     function renderItems(items) {
       allItems = items;
       applyFilter(document.getElementById('search').value);
-      updateStickyOffset();
-    }
-
-    function renderExpiryBadge(expiryDate) {
-      if (!expiryDate) return '';
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const exp = new Date(expiryDate + 'T00:00:00');
-      const diffDays = Math.round((exp - today) / 86400000);
-      if (diffDays < 0) return `<span class="expiry-badge expired">Abgelaufen</span>`;
-      if (diffDays <= 3) return `<span class="expiry-badge soon">${diffDays === 0 ? 'Heute' : `in ${diffDays} Tag${diffDays > 1 ? 'en' : ''}`}</span>`;
-      return '';
-    }
-
-    function renderItemRow(item) {
-      const hasQty = item.quantity != null;
-      const unit    = item.unit ?? '';
-      const zeroed  = zeroedItems.has(item.name);
-      const dispQty = zeroed ? 0 : item.quantity;
-      const measurable = hasQty && isMeasurableUnit(unit) && item.fullQuantity;
-
-      let pill = '';
-      if (hasQty) {
-        if (measurable) {
-          const pct = zeroed ? 0 : Math.round((dispQty / item.fullQuantity) * 100);
-          pill = `<span class="info-pill">${pct}%</span>`;
-        } else {
-          pill = `<span class="info-pill">${dispQty}${unit ? ' ' + escHtml(unit) : ''}</span>`;
-        }
-      }
-
-      const controls = hasQty
-        ? ''
-        : `<button class="btn remove-btn" data-action="remove">✓</button>`;
-
-      return `
-        <div class="item-wrap">
-          <div class="swipe-bg">🗑️</div>
-          <div class="item${zeroed ? ' zeroed' : ''}" data-name="${escHtml(item.name)}">
-            <div class="item-info">
-              <div class="item-name">${escHtml(item.name)}</div>
-            </div>
-            ${renderExpiryBadge(item.expiryDate)}
-            ${pill}
-            <button class="btn bring-btn${zeroed ? ' pulse' : ''}" data-action="bring">🛒</button>
-            ${controls}
-          </div>
-        </div>`;
-    }
-
-    function renderGroup(cat, items) {
-      const meta = CATEGORY_META[cat];
-      const body = items.length
-        ? items.map(renderItemRow).join('')
-        : '<div class="group-empty">Keine Artikel</div>';
-      return `
-        <div class="category-group">
-          <div class="category-header">${meta.icon} ${meta.label} <span class="category-count">${items.length}</span></div>
-          ${body}
-        </div>`;
     }
 
     function applyFilter(query = '') {
       const q = query.toLowerCase().trim();
-      const filtered = q ? allItems.filter(i => i.name.toLowerCase().includes(q)) : allItems;
-      const container = document.getElementById('items-list');
+      const container = document.getElementById('items-grid');
 
       if (!allItems.length) {
         container.innerHTML = '<div class="empty-state"><div class="icon">🫙</div><p>Kühlschrank ist leer</p></div>';
         return;
       }
-      if (q && !filtered.length) {
+
+      const filtered = allItems.filter(i => {
+        const matchesFilter = !activeFilters.size || activeFilters.has(i.category || 'kuehlschrank');
+        const matchesQuery = !q || i.name.toLowerCase().includes(q);
+        return matchesFilter && matchesQuery;
+      });
+
+      if (!filtered.length) {
         container.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>Nichts gefunden</p></div>';
         return;
       }
 
-      container.innerHTML = CATEGORY_ORDER.map(cat => {
-        const items = filtered.filter(i => (i.category || 'kuehlschrank') === cat);
-        if (q && !items.length) return '';
-        return renderGroup(cat, items);
-      }).join('');
-
-      document.querySelectorAll('.item-wrap').forEach(attachSwipe);
-    }
-
-    // ── SWIPE TO DELETE ───────────────────────────────────────────────────────
-
-    function attachSwipe(wrap) {
-      const item = wrap.querySelector('.item');
-      if (!item) return;
-
-      let startX = 0, startY = 0, dx = 0, active = false;
-      const THRESHOLD = 72;
-
-      item.addEventListener('touchstart', e => {
-        if (e.target.closest('.btn')) return;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        dx = 0; active = false;
-      }, { passive: true });
-
-      item.addEventListener('touchmove', e => {
-        if (!startX) return;
-        const moveX = e.touches[0].clientX - startX;
-        const moveY = e.touches[0].clientY - startY;
-
-        if (!active) {
-          if (Math.abs(moveX) < 4 && Math.abs(moveY) < 4) return;
-          if (Math.abs(moveY) > Math.abs(moveX)) { startX = 0; return; }
-          active = true;
-        }
-
-        dx = Math.min(0, moveX);
-        item.classList.add('swiping');
-        item.style.transform = `translateX(${dx}px)`;
-        e.preventDefault();
-      }, { passive: false });
-
-      item.addEventListener('touchend', () => {
-        if (!active) return;
-        startX = 0; active = false;
-        item.classList.remove('swiping');
-
-        if (dx < -THRESHOLD) {
-          deleteItem(item.dataset.name, item, wrap);
-        } else {
-          item.style.transition = 'transform 0.22s ease';
-          item.style.transform = '';
-          setTimeout(() => item.style.transition = '', 220);
-        }
-        dx = 0;
-      }, { passive: true });
+      container.innerHTML = filtered.map(renderCard).join('');
     }
 
     // ── ACTIONS ───────────────────────────────────────────────────────────────
@@ -876,6 +901,7 @@
     async function handleUndo() {
       const btn = document.getElementById('undo-btn');
       btn.disabled = true;
+      closeMenu();
       const res = await fetch('/api/fridge/undo', { method: 'POST', headers });
       const { success, items } = await res.json();
       if (success) {
@@ -887,32 +913,35 @@
       }
     }
 
-    async function deleteItem(name, itemEl, wrap) {
-      const target = wrap ?? itemEl.closest('.item-wrap');
-      itemEl.classList.add('removing');
-      await fetch(`/api/fridge/${encodeURIComponent(name)}`, { method: 'DELETE', headers });
+    function patchItem(name, patch) {
+      return fetch(`/api/fridge/${encodeURIComponent(name)}`, {
+        method: 'PATCH', headers, body: JSON.stringify(patch),
+      });
+    }
+
+    async function deleteItem(name) {
       allItems = allItems.filter(i => i.name !== name);
       zeroedItems.delete(name);
-      setTimeout(() => {
-        applyFilter(document.getElementById('search').value);
-      }, 220);
+      bringDone.delete(name);
+      applyFilter(document.getElementById('search').value);
+      await fetch(`/api/fridge/${encodeURIComponent(name)}`, { method: 'DELETE', headers });
       tg.HapticFeedback?.notificationOccurred('success');
       enableUndo();
     }
 
-    async function addToBring(name, btn) {
-      btn.disabled = true;
-      try {
-        await fetch('/api/fridge/bring', {
-          method: 'POST', headers, body: JSON.stringify({ name }),
-        });
-        btn.classList.remove('pulse');
-        btn.classList.add('done');
-        btn.textContent = '✓';
-        tg.HapticFeedback?.notificationOccurred('success');
-      } catch {
-        btn.disabled = false;
-        tg.HapticFeedback?.notificationOccurred('error');
+    async function toggleBring(name, btn) {
+      const nowDone = !bringDone.has(name);
+      nowDone ? bringDone.add(name) : bringDone.delete(name);
+      btn.classList.toggle('done', nowDone);
+      btn.classList.remove('pulse');
+      btn.textContent = nowDone ? '✓' : '🛒';
+      tg.HapticFeedback?.notificationOccurred('success');
+      if (nowDone) {
+        try {
+          await fetch('/api/fridge/bring', { method: 'POST', headers, body: JSON.stringify({ name }) });
+        } catch {
+          tg.HapticFeedback?.notificationOccurred('error');
+        }
       }
     }
 
@@ -931,14 +960,14 @@
       repeatTimer = repeatInterval = null;
     }
 
-    // ── EVENT LISTENERS (Liste) ───────────────────────────────────────────────
+    // ── EVENT LISTENERS (Grid) ────────────────────────────────────────────────
 
-    document.getElementById('items-list').addEventListener('click', e => {
-      const item = e.target.closest('.item');
-      if (!item) return;
-      const name = item.dataset.name;
-      if (e.target.closest('.remove-btn')) { deleteItem(name, item); return; }
-      if (e.target.closest('.bring-btn')) { addToBring(name, e.target.closest('.bring-btn')); return; }
+    document.getElementById('items-grid').addEventListener('click', e => {
+      const card = e.target.closest('.card');
+      if (!card) return;
+      const name = card.dataset.name;
+      const bringBtn = e.target.closest('.card-bring');
+      if (bringBtn) { e.stopPropagation(); toggleBring(name, bringBtn); return; }
       openDetail(name);
     });
 
@@ -946,9 +975,33 @@
       applyFilter(e.target.value);
     });
 
-    document.getElementById('undo-btn').addEventListener('click', handleUndo);
+    document.getElementById('filter-chips').addEventListener('click', e => {
+      const chip = e.target.closest('.filter-chip');
+      if (!chip) return;
+      const cat = chip.dataset.category;
+      activeFilters.has(cat) ? activeFilters.delete(cat) : activeFilters.add(cat);
+      renderChips();
+      applyFilter(document.getElementById('search').value);
+    });
 
-    window.addEventListener('resize', updateStickyOffset);
+    // ── HEADER: Schließen & Overflow-Menü ─────────────────────────────────────
+
+    const menuDropdown = document.getElementById('menu-dropdown');
+
+    function closeMenu() { menuDropdown.classList.remove('open'); }
+
+    document.getElementById('close-btn').addEventListener('click', () => tg.close());
+
+    document.getElementById('menu-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      menuDropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.menu-wrap')) closeMenu();
+    });
+
+    document.getElementById('undo-btn').addEventListener('click', handleUndo);
 
     // Batch-delete zeroed items when app closes
     window.addEventListener('pagehide', () => {
@@ -965,19 +1018,20 @@
     // ── INIT ──────────────────────────────────────────────────────────────────
 
     async function loadItems() {
+      renderChips();
       renderSkeleton();
       try {
-        const res   = await fetch('/api/fridge', { headers });
+        const res = await fetch('/api/fridge', { headers });
         if (!res.ok) {
           const debug = `platform=${tg.platform} version=${tg.version} initDataLen=${initData.length}`;
-          document.getElementById('items-list').innerHTML =
+          document.getElementById('items-grid').innerHTML =
             `<div class="empty-state"><div class="icon">⚠️</div><p>Nicht autorisiert (HTTP ${res.status})</p><p style="font-size:11px;opacity:.6;margin-top:8px;">${debug}</p></div>`;
           return;
         }
         const items = await res.json();
         renderItems(items);
       } catch {
-        document.getElementById('items-list').innerHTML =
+        document.getElementById('items-grid').innerHTML =
           '<div class="empty-state"><div class="icon">⚠️</div><p>Fehler beim Laden</p></div>';
       }
     }
@@ -990,7 +1044,7 @@
     // Geste auf einem Bedienelement (Input, Chip, Slider, Button), wird sie
     // ignoriert, damit dessen eigene Touch-Bedienung unangetastet bleibt.
 
-    const SHEET_DRAG_IGNORE = 'input, .chip, .btn, .detail-slider';
+    const SHEET_DRAG_IGNORE = 'input, .chip, .qty-btn, .detail-delete-btn, .detail-slider';
 
     function attachSheetSwipeDown(sheetEl, closeFn) {
       let startY = 0, dy = 0, tracking = false, dragging = false;
@@ -1027,75 +1081,45 @@
       }, { passive: true });
     }
 
-    // ── DETAIL-SHEET (MHD, Füllstand, Kategorie) ─────────────────────────────
+    // ── DETAIL-SHEET (MHD, Menge, Kategorie) ─────────────────────────────────
 
-    const detailOverlay   = document.getElementById('detail-overlay');
-    const detailSheet     = document.getElementById('detail-sheet');
-    const detailName      = document.getElementById('detail-name');
-    const detailExpiry    = document.getElementById('detail-expiry');
-    const detailSlider    = document.getElementById('detail-slider');
-    const detailSliderPct = document.getElementById('detail-slider-pct');
-    const detailSliderAbs = document.getElementById('detail-slider-abs');
-    const detailStepperDisplay = document.getElementById('detail-stepper-display');
-    const detailAmountField    = document.getElementById('detail-amount-field');
-    const detailSliderBlock    = document.getElementById('detail-slider-block');
-    const detailStepperBlock   = document.getElementById('detail-stepper-block');
+    const detailOverlay  = document.getElementById('detail-overlay');
+    const detailSheet    = document.getElementById('detail-sheet');
+    const detailNameEl   = document.getElementById('detail-name');
+    const detailExpiry   = document.getElementById('detail-expiry');
+    const detailAmountField = document.getElementById('detail-amount-field');
+    const detailQtyDisplay  = document.getElementById('detail-qty-display');
+    const detailSlider      = document.getElementById('detail-slider');
 
-    function patchItem(name, patch) {
-      return fetch(`/api/fridge/${encodeURIComponent(name)}`, {
-        method: 'PATCH', headers, body: JSON.stringify(patch),
-      });
+    // Schrittweite je Einheit: g/ml → 10, kg/l → 0,1, sonst (Stk/Pkg/…) → 0,5
+    function stepFor(unit) {
+      if (unit === 'g' || unit === 'ml') return 10;
+      if (unit === 'kg' || unit === 'l') return 0.1;
+      return 0.5;
     }
 
-    const PIECE_STEP = 0.5;
+    function round2(n) { return Math.round(n * 100) / 100; }
 
-    function applySliderStyle(pct) {
-      const hue = Math.round(Math.max(0, Math.min(100, pct)) * 1.2);
-      detailSlider.style.setProperty('--fill-pct', pct + '%');
-      detailSlider.style.setProperty('--fill-color', `hsl(${hue}, 70%, 45%)`);
-    }
-
-    // Zwei Slider-Modi: 'pct' für messbare Einheiten (g/kg/ml/l, relativ zur
-    // Füllmenge), 'abs' für Stückzahlen & alles andere (direkte Menge, 0,5er-Schritte).
-    function sliderMode() {
-      return isMeasurableUnit(currentItem.unit) ? 'pct' : 'abs';
-    }
-
-    function updateSliderUI() {
+    function updateAmountUI() {
       const zeroed = zeroedItems.has(currentItem.name);
-      const unit = currentItem.unit ?? '';
-      const mode = sliderMode();
-      detailSlider.dataset.mode = mode;
+      const qty = zeroed ? 0 : currentItem.quantity;
+      const full = currentItem.fullQuantity;
+      const percentMode = isPercentItem(currentItem);
 
-      if (mode === 'pct') {
-        const pct = zeroed ? 0 : Math.round((currentItem.quantity / currentItem.fullQuantity) * 100);
-        const abs = zeroed ? 0 : currentItem.quantity;
-        detailSlider.min = 0; detailSlider.max = 100; detailSlider.step = 5;
-        detailSlider.value = pct;
-        applySliderStyle(pct);
-        detailSliderPct.textContent = `${pct}%`;
-        detailSliderAbs.textContent = `≈ ${abs} ${unit} von ${currentItem.fullQuantity} ${unit}`;
-      } else {
-        const full = currentItem.fullQuantity;
-        const qty = zeroed ? 0 : currentItem.quantity;
+      detailQtyDisplay.textContent = pillFor({ ...currentItem, quantity: qty });
+
+      if (percentMode) {
         const pct = full ? Math.round((qty / full) * 100) : 0;
-        detailSlider.min = 0; detailSlider.max = full; detailSlider.step = PIECE_STEP;
+        detailSlider.min = 0; detailSlider.max = 100; detailSlider.step = 1;
+        detailSlider.value = pct;
+      } else {
+        detailSlider.min = 0; detailSlider.max = full != null ? full : qty; detailSlider.step = 0.5;
         detailSlider.value = qty;
-        applySliderStyle(pct);
-        detailSliderPct.textContent = `${qty}${unit ? ' ' + unit : ''}`;
-        detailSliderAbs.textContent = `von ${full}${unit ? ' ' + unit : ''}`;
       }
     }
 
-    function updateStepperUI() {
-      const zeroed = zeroedItems.has(currentItem.name);
-      const qty = zeroed ? 0 : currentItem.quantity;
-      const unit = currentItem.unit ?? '';
-      detailStepperDisplay.textContent = `${qty}${unit ? ' ' + unit : ''}`;
-    }
-
     function renderDetail() {
-      detailName.textContent = currentItem.name;
+      detailNameEl.textContent = currentItem.name;
 
       document.querySelectorAll('#detail-category-chips .chip').forEach(c => {
         c.classList.toggle('active', c.dataset.category === currentItem.category);
@@ -1108,10 +1132,7 @@
         return;
       }
       detailAmountField.style.display = '';
-      const hasSlider = currentItem.fullQuantity != null;
-      detailSliderBlock.style.display  = hasSlider ? '' : 'none';
-      detailStepperBlock.style.display = hasSlider ? 'none' : '';
-      if (hasSlider) updateSliderUI(); else updateStepperUI();
+      updateAmountUI();
     }
 
     function openDetail(name) {
@@ -1133,16 +1154,15 @@
     attachSheetSwipeDown(detailSheet, closeDetail);
 
     // Kategorie ändern
-    document.querySelectorAll('#detail-category-chips .chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        if (!currentItem) return;
-        currentItem.category = chip.dataset.category;
-        document.querySelectorAll('#detail-category-chips .chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        applyFilter(document.getElementById('search').value);
-        tg.HapticFeedback?.notificationOccurred('success');
-        patchItem(currentItem.name, { category: currentItem.category });
-      });
+    document.getElementById('detail-category-chips').addEventListener('click', e => {
+      const chip = e.target.closest('.chip');
+      if (!chip || !currentItem) return;
+      currentItem.category = chip.dataset.category;
+      document.querySelectorAll('#detail-category-chips .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      applyFilter(document.getElementById('search').value);
+      tg.HapticFeedback?.notificationOccurred('success');
+      patchItem(currentItem.name, { category: currentItem.category });
     });
 
     // MHD
@@ -1173,85 +1193,43 @@
       commitExpiry(null);
     });
 
-    // Füllstand-Slider
-    detailSlider.addEventListener('input', () => {
-      const unit = currentItem.unit ?? '';
-      if (detailSlider.dataset.mode === 'pct') {
-        const pct = parseInt(detailSlider.value, 10);
-        applySliderStyle(pct);
-        const abs = Math.round(currentItem.fullQuantity * pct / 100 * 100) / 100;
-        detailSliderPct.textContent = `${pct}%`;
-        detailSliderAbs.textContent = `≈ ${abs} ${unit} von ${currentItem.fullQuantity} ${unit}`;
-      } else {
-        const qty = parseFloat(detailSlider.value);
-        const full = currentItem.fullQuantity;
-        const pct = full ? Math.round(qty / full * 100) : 0;
-        applySliderStyle(pct);
-        detailSliderPct.textContent = `${qty}${unit ? ' ' + unit : ''}`;
-        detailSliderAbs.textContent = `von ${full}${unit ? ' ' + unit : ''}`;
-      }
-    });
+    // Menge: gemeinsamer Commit-Pfad für Stepper & Slider
+    function commitQty(newQty) {
+      const full = currentItem.fullQuantity;
+      const clamped = Math.max(0, full != null ? Math.min(full, newQty) : newQty);
 
-    detailSlider.addEventListener('change', () => {
-      if (!currentItem) return;
-      const mode = detailSlider.dataset.mode;
-      let qty;
-      if (mode === 'pct') {
-        const pct = parseInt(detailSlider.value, 10);
-        if (pct <= 0) {
-          zeroedItems.add(currentItem.name);
-          updateSliderUI();
-          tg.HapticFeedback?.notificationOccurred('warning');
-          applyFilter(document.getElementById('search').value);
-          return;
-        }
-        qty = Math.round(currentItem.fullQuantity * pct / 100 * 100) / 100;
-      } else {
-        qty = parseFloat(detailSlider.value);
-        if (qty <= 0) {
-          zeroedItems.add(currentItem.name);
-          updateSliderUI();
-          tg.HapticFeedback?.notificationOccurred('warning');
-          applyFilter(document.getElementById('search').value);
-          return;
-        }
-      }
-      zeroedItems.delete(currentItem.name);
-      currentItem.quantity = qty;
-      updateSliderUI();
-      tg.HapticFeedback?.notificationOccurred('success');
-      enableUndo();
-      applyFilter(document.getElementById('search').value);
-      patchItem(currentItem.name, { quantity: qty });
-    });
-
-    // Stepper (zählbare Artikel)
-    function detailAdjustQty(delta) {
-      const zeroed = zeroedItems.has(currentItem.name);
-      if (zeroed) {
-        if (delta < 0) return;
-        zeroedItems.delete(currentItem.name);
-        currentItem.quantity = 1;
-        updateStepperUI();
-        tg.HapticFeedback?.notificationOccurred('success');
-        enableUndo();
-        applyFilter(document.getElementById('search').value);
-        return;
-      }
-      const newQty = parseFloat(((currentItem.quantity ?? 0) + delta).toFixed(3));
-      if (newQty <= 0) {
+      if (clamped <= 0) {
         zeroedItems.add(currentItem.name);
-        updateStepperUI();
+        updateAmountUI();
         tg.HapticFeedback?.notificationOccurred('warning');
         applyFilter(document.getElementById('search').value);
         return;
       }
-      currentItem.quantity = newQty;
-      updateStepperUI();
+
+      zeroedItems.delete(currentItem.name);
+      currentItem.quantity = clamped;
+      updateAmountUI();
       tg.HapticFeedback?.notificationOccurred('success');
       enableUndo();
       applyFilter(document.getElementById('search').value);
-      patchItem(currentItem.name, { delta });
+      patchItem(currentItem.name, { quantity: clamped });
+    }
+
+    function detailAdjustQty(dir) {
+      const zeroed = zeroedItems.has(currentItem.name);
+      if (zeroed) {
+        if (dir < 0) return;
+        zeroedItems.delete(currentItem.name);
+        currentItem.quantity = Math.min(currentItem.fullQuantity ?? 1, 1);
+        updateAmountUI();
+        tg.HapticFeedback?.notificationOccurred('success');
+        enableUndo();
+        applyFilter(document.getElementById('search').value);
+        patchItem(currentItem.name, { quantity: currentItem.quantity });
+        return;
+      }
+      const step = stepFor(currentItem.unit) * dir;
+      commitQty(round2(currentItem.quantity + step));
     }
 
     document.getElementById('detail-minus-btn').addEventListener('pointerdown', e => {
@@ -1274,17 +1252,31 @@
       btn.addEventListener('pointercancel', stop, { once: true });
     });
 
+    // Slider: live während des Ziehens nur anzeigen, beim Loslassen committen
+    detailSlider.addEventListener('input', () => {
+      if (!currentItem) return;
+      const raw = parseFloat(detailSlider.value);
+      const qty = isPercentItem(currentItem)
+        ? Math.round((raw / 100) * currentItem.fullQuantity)
+        : raw;
+      detailQtyDisplay.textContent = pillFor({ ...currentItem, quantity: qty });
+    });
+
+    detailSlider.addEventListener('change', () => {
+      if (!currentItem) return;
+      const raw = parseFloat(detailSlider.value);
+      const qty = isPercentItem(currentItem)
+        ? Math.round((raw / 100) * currentItem.fullQuantity)
+        : raw;
+      commitQty(qty);
+    });
+
     // Löschen
     document.getElementById('detail-delete-btn').addEventListener('click', async () => {
       if (!currentItem) return;
       const name = currentItem.name;
       closeDetail();
-      await fetch(`/api/fridge/${encodeURIComponent(name)}`, { method: 'DELETE', headers });
-      allItems = allItems.filter(i => i.name !== name);
-      zeroedItems.delete(name);
-      applyFilter(document.getElementById('search').value);
-      tg.HapticFeedback?.notificationOccurred('success');
-      enableUndo();
+      await deleteItem(name);
     });
 
     // ── ADD-SHEET ─────────────────────────────────────────────────────────────
@@ -1294,11 +1286,17 @@
     const overlay  = document.getElementById('sheet-overlay');
     const inpName  = document.getElementById('inp-name');
     const inpQty   = document.getElementById('inp-qty');
-    const inpUnit  = document.getElementById('inp-unit');
     const addBtn   = document.getElementById('add-btn');
 
+    let selectedUnit = null;
     let selectedCategory = 'kuehlschrank';
     let categoryManuallySet = false;
+
+    function setAddUnitChips(unit) {
+      document.querySelectorAll('#add-unit-chips .chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.unit === unit);
+      });
+    }
 
     function setAddCategoryChips(category) {
       document.querySelectorAll('#add-category-chips .chip').forEach(c => {
@@ -1309,18 +1307,16 @@
     function openSheet() {
       overlay.classList.add('visible');
       sheet.classList.add('open');
-      fab.classList.add('open');
       setTimeout(() => inpName.focus(), 320);
     }
 
     function closeSheet() {
       sheet.classList.remove('open');
       overlay.classList.remove('visible');
-      fab.classList.remove('open');
       inpName.value = '';
       inpQty.value  = '';
-      inpUnit.value = '';
-      document.querySelectorAll('#add-unit-chips .chip').forEach(c => c.classList.remove('active'));
+      selectedUnit = null;
+      setAddUnitChips(selectedUnit);
       selectedCategory = 'kuehlschrank';
       categoryManuallySet = false;
       setAddCategoryChips(selectedCategory);
@@ -1340,37 +1336,26 @@
       }
     });
 
-    document.querySelectorAll('#add-unit-chips .chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('#add-unit-chips .chip').forEach(c => c.classList.remove('active'));
-        if (inpUnit.value === chip.dataset.unit) {
-          inpUnit.value = '';
-        } else {
-          chip.classList.add('active');
-          inpUnit.value = chip.dataset.unit;
-        }
-      });
+    document.getElementById('add-unit-chips').addEventListener('click', e => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      selectedUnit = selectedUnit === chip.dataset.unit ? null : chip.dataset.unit;
+      setAddUnitChips(selectedUnit);
     });
 
-    document.querySelectorAll('#add-category-chips .chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        selectedCategory = chip.dataset.category;
-        categoryManuallySet = true;
-        setAddCategoryChips(selectedCategory);
-      });
-    });
-
-    inpUnit.addEventListener('input', () => {
-      document.querySelectorAll('#add-unit-chips .chip').forEach(c => {
-        c.classList.toggle('active', c.dataset.unit === inpUnit.value);
-      });
+    document.getElementById('add-category-chips').addEventListener('click', e => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      selectedCategory = chip.dataset.category;
+      categoryManuallySet = true;
+      setAddCategoryChips(selectedCategory);
     });
 
     addBtn.addEventListener('click', async () => {
       const name = inpName.value.trim();
       if (!name) return;
       const qty  = inpQty.value !== '' ? parseFloat(inpQty.value) : null;
-      const unit = inpUnit.value.trim() || null;
+      const unit = selectedUnit;
 
       addBtn.disabled = true;
       try {
@@ -1439,11 +1424,9 @@
         if (data.found && data.product) {
           inpName.value = data.product.name;
           inpQty.value  = data.product.quantity ?? '';
-          inpUnit.value = data.product.unit ?? '';
+          selectedUnit  = data.product.unit ?? null;
           addBtn.disabled = !inpName.value.trim();
-          document.querySelectorAll('#add-unit-chips .chip').forEach(c => {
-            c.classList.toggle('active', c.dataset.unit === inpUnit.value);
-          });
+          setAddUnitChips(selectedUnit);
           selectedCategory = guessCategory(inpName.value);
           categoryManuallySet = false;
           setAddCategoryChips(selectedCategory);
