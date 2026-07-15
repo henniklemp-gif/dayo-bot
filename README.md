@@ -32,7 +32,7 @@ npm start
 
 ## Kühlschrank Mini App – aktueller Stand (Juli 2026)
 
-Die Mini App (`public/index.html`) zeigt den Kühlschrankinhalt gruppiert nach Lagerort und erlaubt pro Artikel eine Detail-Pflege.
+Die Mini App (`public/index.html`) wurde auf ein Karten-Grid-Redesign umgestellt (Design-Vorlage: `Redesign/` – Referenz-Prototyp + `README.md` dort, nicht Teil des Produktivcodes). Das Backend/Datenmodell ist dabei unverändert geblieben, es handelt sich ausschließlich um eine Frontend-Überarbeitung.
 
 **Datenmodell** (`kuehlschrank.json`, verwaltet über `fridge.js`):
 ```js
@@ -40,11 +40,17 @@ Die Mini App (`public/index.html`) zeigt den Kühlschrankinhalt gruppiert nach L
 ```
 - `category`: `kuehlschrank` | `tiefkuehlfach` | `speisekammer` (Pflichtfeld, Default `kuehlschrank` für Altbestände)
 - `expiryDate`: ISO-Datum (MHD), nullable, manuell gepflegt
-- `fullQuantity`: Referenzmenge für den Detail-Slider, wird für **alle** Einheiten automatisch beim (Nach-)Hinzufügen gesetzt (bei Bestandsdaten ohne Wert wird sie beim Laden rückwirkend nachgetragen = aktuelle Menge gilt als "voll")
+- `fullQuantity`: Referenzmenge für Stepper & Slider, wird für **alle** Einheiten automatisch beim (Nach-)Hinzufügen gesetzt (bei Bestandsdaten ohne Wert wird sie beim Laden rückwirkend nachgetragen = aktuelle Menge gilt als "voll")
 
-**Ebene 1 (Liste):** nach Kategorie gruppiert mit Sticky-Headern (🧊/❄️/🥫 inkl. Artikelzahl). Zeile zeigt Name, Info-Pill (Füllstand-% bei Gewicht/Volumen, sonst Stückzahl), optionales Ablauf-Badge (rot „Abgelaufen“, orange „in X Tagen“), Bring!-Button, Swipe-to-delete. Keine Produkt-Emojis mehr (bewusst entfernt – zu ungenau, evtl. später eigene Produkt-Datenbank).
+**Fixes dunkles Theme:** Statt der Telegram-Theme-Variablen (`--tg-theme-*`) nutzt die App jetzt ein festes warmes Dunkel-Farbschema in OKLCH (unabhängig vom Theme des Telegram-Clients).
 
-**Ebene 2 (Detail-Sheet, Tap auf Zeile):** Kategorie ändern (Pflicht-Chips), MHD setzen (Datumsfeld + Schnellauswahl-Chips +3 Tage/+1 Woche/+2 Wochen/+1 Monat), Menge anpassen – Füllstand-Slider (farbcodiert grün→rot) für alle Artikel mit bekannter Referenzmenge: bei Gewicht/Volumen-Einheiten (`g`/`kg`/`ml`/`l`) prozentual in 5%-Schritten, bei Stückzahlen und allen anderen Einheiten (Stk, Pkg, …) direkt in 0,5er-Schritten. Der alte +/–-Stepper dient nur noch als Fallback ohne bekannte Referenzmenge. Artikel löschen.
+**Übersicht (Karten-Grid statt Liste):** Artikel erscheinen als 2-spaltiges Karten-Grid statt als gruppierte Liste mit Sticky-Headern. In der Übersicht sind fest 7 Zeilen (= 14 Karten) sichtbar (`grid-auto-rows` berechnet die Zeilenhöhe aus der verfügbaren Grid-Fläche); bei mehr Artikeln wird mit gleicher Zeilenhöhe weitergescrollt. Statt der Kategorie-Sticky-Header gibt es oben Filter-Chips (Mehrfachauswahl, gleichmäßig auf die Breite verteilt, kein horizontales Scrollen mehr nötig). Jede Karte zeigt ein produktspezifisches Emoji-Icon (Namens-Keyword-Zuordnung mit Kategorie-Icon als Fallback – **Produkt-Emojis sind damit wieder da**, die frühere Entscheidung dagegen wurde mit dem Redesign revidiert), Name, Mengen-Pill (Füllstand-% bei Gewicht/Volumen, sonst Stückzahl/Einheit) und Bring!-Button (echter Toggle: erneutes Antippen setzt den lokalen Status zurück, ein "Entfernen von der Bring!-Liste" gibt es serverseitig weiterhin nicht). Das MHD wird nicht mehr als Text-Badge in der Liste angezeigt, sondern als reiner Farbpunkt oben rechts auf der Karte (rot ≤ 1 Tag, gelb 2–5 Tage, grün > 5 Tage, kein Punkt ohne MHD). Swipe-to-delete auf der Karte entfällt (Karten sind nicht mehr swipebar) – Löschen läuft ausschließlich über den 🗑️-Button im Detail-Sheet.
+
+**Detail-Sheet (Tap auf Karte):** Kategorie ändern (Pflicht-Chips), MHD setzen (Datumsfeld + Schnellauswahl-Chips +3 Tage/+1 Woche/+2 Wochen/+1 Monat), Menge anpassen. Stepper (+/–) und Füllstand-Slider sind jetzt **immer gleichzeitig sichtbar und synchron** (kein Fallback-Modus mehr abhängig von bekannter/unbekannter Referenzmenge): bei Gewicht/Volumen-Einheiten (`g`/`kg`/`ml`/`l`) prozentual in 1%-Schritten, bei Stückzahlen und allen anderen Einheiten (Stk, Pkg, …) direkt in 0,5er-Schritten; der Stepper nutzt dieselbe Schrittweite (10 bei `g`/`ml`, 0,1 bei `kg`/`l`, sonst 0,5) und ist wie der Slider durch `fullQuantity` nach oben gedeckelt. Der Slider hat einen sichtbaren Track mit eigenem Rahmen-Akzent (abgesetzt von der Button-Akzentfarbe), da der reine `accent-color`-Ansatz den Track auf dem dunklen Hintergrund unsichtbar gemacht hatte. Artikel löschen.
+
+**Header entfernt:** Der frühere eigene Header (✕/Avatar/„Dayo"/•••-Overflow-Menü) wurde ersatzlos gestrichen, da Telegram Mini Apps bereits eine native Close-Steuerung mitbringen. Der zuvor hinter dem •••-Menü versteckte Rückgängig-Button sitzt jetzt als eigener Icon-Button direkt in der Titelzeile, links vom Barcode-Scan-Button.
+
+**Add-Sheet:** Einheit wird nur noch über Chips gewählt (Stk, g, kg, ml, l, Pkg) – das frühere freie Texteingabefeld für die Einheit entfällt.
 
 **Kategorie-Zuordnung:**
 - Kassenbon-Scan (95% der Fälle): Claude liefert `category` direkt in der Vision-Anfrage mit
@@ -53,7 +59,7 @@ Die Mini App (`public/index.html`) zeigt den Kühlschrankinhalt gruppiert nach L
 **Offener Punkt:** `guessCategory()` ist eine generische Zuordnung (abgeleitet aus Lebensmittel-Keywords). Kann anhand eines echten Kassenbons/typischer Produktliste weiter kalibriert werden.
 
 ### Betroffene Dateien
-`fridge.js`, `server.js` (PATCH `/api/fridge/:name` akzeptiert jetzt `quantity`, `category`, `expiryDate`, `fullQuantity` zusätzlich zu `delta`), `vision.js` (Prompt), `public/index.html`.
+`public/index.html` (komplettes Redesign, siehe oben). `fridge.js`, `server.js` (PATCH `/api/fridge/:name` akzeptiert `quantity`, `category`, `expiryDate`, `fullQuantity` zusätzlich zu `delta`) und `vision.js` (Prompt) sind vom Redesign selbst nicht betroffen.
 
 ## Morgennachricht – aktueller Stand (Juli 2026)
 
