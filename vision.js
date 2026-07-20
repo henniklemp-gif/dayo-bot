@@ -34,10 +34,14 @@ Antworte NUR mit einem JSON-Array ohne weitere Erklärung: [{"name": "Produktnam
 
   const text = response.content[0].text.trim();
   const match = text.match(/\[[\s\S]*\]/);
-  if (!match) return [];
+  if (!match) {
+    console.error('[vision] Keine JSON-Array-Antwort erhalten:', text);
+    return [];
+  }
   try {
     return JSON.parse(match[0]);
-  } catch {
+  } catch (e) {
+    console.error('[vision] JSON-Parse fehlgeschlagen:', e.message, '| Rohtext:', text);
     return [];
   }
 }
